@@ -1,0 +1,614 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NewsLens</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Courier New', monospace; background: #fff; color: #111; }
+ 
+        #progressBar {
+            position: fixed; top: 0; left: 0;
+            height: 2px; background: #111; width: 0%;
+            z-index: 9999; transition: width 0.1s linear;
+        }
+ 
+        .nav {
+            position: sticky; top: 0;
+            background: rgba(255,255,255,0.96);
+            backdrop-filter: blur(8px);
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 28px 48px;
+            border-bottom: 0.5px solid #ccc;
+            z-index: 100;
+            transition: padding 0.3s ease;
+        }
+        .nav.scrolled { padding: 16px 48px; }
+        .nav-logo { display: flex; align-items: center; gap: 12px; }
+        .logo-mark {
+            width: 32px; height: 32px; background: #111;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 14px; color: #fff; font-weight: 700; letter-spacing: -1px;
+            transition: transform 0.2s ease;
+        }
+        .nav-logo:hover .logo-mark { transform: rotate(6deg); }
+        .nav-logo-text { font-size: 15px; letter-spacing: 0.08em; font-weight: 700; }
+        .nav-links { display: flex; gap: 32px; align-items: center; }
+        .nav-links a {
+            font-size: 13px; color: #333; text-decoration: none; letter-spacing: 0.04em;
+            position: relative;
+        }
+        .nav-links a::after {
+            content: ''; position: absolute; bottom: -2px; left: 0;
+            width: 0; height: 0.5px; background: #111; transition: width 0.2s ease;
+        }
+        .nav-links a:hover::after { width: 100%; }
+        .nav-links a:hover { color: #111; }
+ 
+        .hero { padding: 100px 48px 80px; max-width: 760px; }
+        .hero-tag { font-size: 11px; letter-spacing: 0.12em; color: #666; text-transform: uppercase; margin-bottom: 28px; }
+        .hero h1 {
+            font-size: 42px; font-weight: 400; line-height: 1.15;
+            letter-spacing: -0.02em; margin-bottom: 24px; color: #111;
+            opacity: 0; transform: translateY(20px);
+            animation: fadeUp 0.7s ease forwards 0.1s;
+        }
+        .hero p {
+            font-size: 15px; color: #444; line-height: 1.75;
+            max-width: 540px; margin-bottom: 40px;
+            opacity: 0; transform: translateY(20px);
+            animation: fadeUp 0.7s ease forwards 0.25s;
+        }
+        .hero-actions {
+            display: flex; gap: 16px;
+            opacity: 0; transform: translateY(20px);
+            animation: fadeUp 0.7s ease forwards 0.4s;
+        }
+        @keyframes fadeUp { to { opacity: 1; transform: translateY(0); } }
+ 
+        .btn-primary {
+            font-family: 'Courier New', monospace; font-size: 13px; padding: 12px 28px;
+            background: #111; color: #fff; border: none; cursor: pointer;
+            letter-spacing: 0.06em; text-decoration: none; display: inline-block;
+            transition: background 0.2s, transform 0.15s;
+        }
+        .btn-primary:hover { background: #333; transform: translateY(-1px); }
+        .btn-primary:active { transform: translateY(0); }
+        .btn-secondary {
+            font-family: 'Courier New', monospace; font-size: 13px; padding: 12px 28px;
+            background: transparent; color: #111; border: 0.5px solid #888; cursor: pointer;
+            letter-spacing: 0.06em; text-decoration: none; display: inline-block;
+            transition: border-color 0.2s, transform 0.15s;
+        }
+        .btn-secondary:hover { border-color: #111; transform: translateY(-1px); }
+ 
+        .divider { width: 100%; height: 0.5px; background: #ccc; }
+ 
+        .features { display: grid; grid-template-columns: repeat(3, 1fr); border-bottom: 0.5px solid #ccc; }
+        .feature {
+            padding: 48px; border-right: 0.5px solid #ccc;
+            transition: background 0.2s;
+            opacity: 0; transform: translateY(16px);
+        }
+        .feature.visible { animation: fadeUp 0.5s ease forwards; }
+        .feature:nth-child(2).visible { animation-delay: 0.1s; }
+        .feature:nth-child(3).visible { animation-delay: 0.2s; }
+        .feature:last-child { border-right: none; }
+        .feature:hover { background: #fafafa; }
+        .feature-num { font-size: 11px; color: #999; letter-spacing: 0.1em; margin-bottom: 20px; }
+        .feature h3 { font-size: 14px; font-weight: 700; margin-bottom: 10px; letter-spacing: 0.02em; color: #111; }
+        .feature p { font-size: 13px; color: #444; line-height: 1.7; }
+ 
+        .how { padding: 64px 48px; border-bottom: 0.5px solid #ccc; display: flex; gap: 80px; }
+        .how-label { font-size: 11px; letter-spacing: 0.1em; color: #666; text-transform: uppercase; min-width: 120px; padding-top: 3px; }
+        .how-list { display: flex; flex-direction: column; gap: 16px; }
+        .how-item {
+            font-size: 13px; color: #333; line-height: 1.7;
+            border-left: 1px solid #ccc; padding-left: 20px;
+            transition: border-color 0.2s, color 0.2s;
+            opacity: 0; transform: translateX(-10px);
+        }
+        .how-item.visible { animation: fadeRight 0.5s ease forwards; }
+        .how-item:nth-child(2).visible { animation-delay: 0.1s; }
+        .how-item:nth-child(3).visible { animation-delay: 0.2s; }
+        .how-item:nth-child(4).visible { animation-delay: 0.3s; }
+        .how-item:hover { border-color: #111; color: #111; }
+        @keyframes fadeRight { to { opacity: 1; transform: translateX(0); } }
+ 
+        .search-section { padding: 48px; border-bottom: 0.5px solid #ccc; }
+        .search-row {
+            display: flex; gap: 0; max-width: 600px; border: 0.5px solid #888;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+        .search-row:focus-within { border-color: #111; box-shadow: 3px 3px 0 #111; }
+        .search-row input {
+            flex: 1; padding: 14px 20px; border: none; outline: none;
+            font-family: 'Courier New', monospace; font-size: 13px; color: #111; background: #fff;
+        }
+        .search-row button {
+            padding: 14px 28px; background: #111; color: #fff; border: none; cursor: pointer;
+            font-family: 'Courier New', monospace; font-size: 13px; letter-spacing: 0.06em;
+            transition: background 0.2s;
+        }
+        .search-row button:hover { background: #333; }
+ 
+        .section-label {
+            font-size: 11px; letter-spacing: 0.12em; color: #666;
+            text-transform: uppercase; margin-bottom: 36px;
+            opacity: 0;
+        }
+        .section-label.visible { animation: fadeUp 0.4s ease forwards; }
+ 
+        .news-section { padding: 64px 48px; border-bottom: 0.5px solid #ccc; }
+        .cards-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 0; border: 0.5px solid #ccc; }
+        .card {
+            padding: 32px; border-right: 0.5px solid #ccc; border-bottom: 0.5px solid #ccc;
+            cursor: pointer; transition: background 0.15s, transform 0.2s, box-shadow 0.2s;
+            opacity: 0; transform: translateY(12px);
+        }
+        .card.visible { animation: fadeUp 0.4s ease forwards; }
+        .card:hover { background: #f9f9f9; transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.06); z-index: 1; position: relative; }
+        .card h3 { font-size: 13px; font-weight: 700; margin-bottom: 12px; line-height: 1.5; color: #111; letter-spacing: 0.01em; }
+        .card p { font-size: 12px; color: #444; line-height: 1.7; margin-bottom: 16px; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+        .card-meta { display: flex; justify-content: space-between; }
+        .sources-count { font-size: 11px; color: #666; letter-spacing: 0.04em; }
+        .card-time { font-size: 11px; color: #888; }
+ 
+        .archive-section { padding: 48px; border-bottom: 0.5px solid #ccc; }
+        .archive-row {
+            display: flex; gap: 0; max-width: 400px; border: 0.5px solid #888; margin-bottom: 24px;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+        .archive-row:focus-within { border-color: #111; box-shadow: 3px 3px 0 #111; }
+        .archive-row input {
+            flex: 1; padding: 14px 20px; border: none; outline: none;
+            font-family: 'Courier New', monospace; font-size: 13px; color: #111; background: #fff;
+        }
+        .archive-row button {
+            padding: 14px 28px; background: #111; color: #fff; border: none; cursor: pointer;
+            font-family: 'Courier New', monospace; font-size: 13px; letter-spacing: 0.06em;
+            transition: background 0.2s;
+        }
+        .archive-row button:hover { background: #333; }
+        #archiveResults .cards-grid { margin-top: 20px; }
+ 
+        .modal-overlay {
+            display: none; position: fixed; top: 0; left: 0;
+            width: 100%; height: 100%; background: rgba(0,0,0,0.5);
+            z-index: 1000; justify-content: center; align-items: flex-start;
+            padding: 60px 20px; overflow-y: auto;
+            opacity: 0; transition: opacity 0.2s;
+        }
+        .modal-overlay.active { display: flex; opacity: 1; }
+        .modal {
+            background: #fff; padding: 48px; max-width: 680px; width: 100%;
+            position: relative; border: 0.5px solid #ccc;
+            transform: translateY(20px); transition: transform 0.25s ease;
+        }
+        .modal-overlay.active .modal { transform: translateY(0); }
+        .modal-close {
+            position: absolute; top: 20px; right: 24px; font-size: 18px;
+            cursor: pointer; color: #666; font-family: 'Courier New', monospace;
+            transition: color 0.15s, transform 0.2s;
+        }
+        .modal-close:hover { color: #111; transform: rotate(90deg); }
+        .modal h2 { font-size: 16px; font-weight: 700; margin-bottom: 20px; line-height: 1.5; padding-right: 30px; color: #111; }
+        .modal .summary { font-size: 14px; line-height: 1.85; color: #333; margin-bottom: 32px; }
+        .modal-label { font-size: 11px; letter-spacing: 0.1em; color: #666; text-transform: uppercase; margin-bottom: 12px; }
+        .source-chips { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 24px; }
+        .source-chip {
+            font-size: 11px; color: #333; border: 0.5px solid #bbb; padding: 5px 14px;
+            letter-spacing: 0.04em; transition: border-color 0.15s, color 0.15s; cursor: default;
+        }
+        .source-chip:hover { border-color: #111; color: #111; }
+        .links-list { display: flex; flex-direction: column; gap: 10px; }
+        .links-list a { font-size: 13px; color: #111; text-decoration: underline; text-underline-offset: 3px; transition: opacity 0.15s; }
+        .links-list a:hover { opacity: 0.6; }
+ 
+        .custom-prompt-box { margin-bottom: 24px; border-top: 0.5px solid #eee; padding-top: 20px; }
+        .prompt-toggle-btn {
+            font-family: 'Courier New', monospace; font-size: 12px; letter-spacing: 0.06em;
+            background: transparent; border: 0.5px solid #bbb; padding: 8px 18px;
+            cursor: pointer; color: #333; transition: border-color 0.2s, color 0.2s;
+        }
+        .prompt-toggle-btn:hover { border-color: #111; color: #111; }
+        .prompt-input-area { margin-top: 14px; display: none; }
+        .prompt-input-area textarea {
+            width: 100%; padding: 12px; font-family: 'Courier New', monospace;
+            font-size: 12px; color: #111; border: 0.5px solid #bbb; resize: none;
+            height: 70px; outline: none; transition: border-color 0.2s;
+        }
+        .prompt-input-area textarea:focus { border-color: #111; }
+        .prompt-actions { display: flex; justify-content: space-between; align-items: center; margin-top: 8px; }
+        .prompt-hint { font-size: 11px; color: #888; }
+        .prompt-submit {
+            font-family: 'Courier New', monospace; font-size: 12px; letter-spacing: 0.06em;
+            background: #111; color: #fff; border: none; padding: 8px 18px; cursor: pointer;
+            transition: background 0.2s;
+        }
+        .prompt-submit:hover { background: #333; }
+ 
+        .footer {
+            padding: 48px; border-top: 0.5px solid #ccc;
+            display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 32px;
+        }
+        .footer-col h4 { font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; color: #999; margin-bottom: 16px; }
+        .footer-col a, .footer-col p { font-size: 12px; color: #555; text-decoration: none; display: block; margin-bottom: 8px; line-height: 1.6; transition: color 0.15s; }
+        .footer-col a:hover { color: #111; }
+        .footer-bottom {
+            padding: 20px 48px; border-top: 0.5px solid #eee;
+            display: flex; justify-content: space-between; align-items: center;
+        }
+        .footer-bottom p { font-size: 11px; color: #888; letter-spacing: 0.04em; }
+        .footer-bottom a { font-size: 11px; color: #888; text-decoration: none; letter-spacing: 0.04em; transition: color 0.15s; }
+        .footer-bottom a:hover { color: #111; }
+        .back-to-top {
+            font-size: 11px; color: #888; cursor: pointer; letter-spacing: 0.06em;
+            text-transform: uppercase; background: none; border: none;
+            font-family: 'Courier New', monospace; transition: color 0.15s, transform 0.2s;
+        }
+        .back-to-top:hover { color: #111; transform: translateY(-2px); }
+ 
+        .loading { padding: 48px; font-size: 13px; color: #666; letter-spacing: 0.04em; display: flex; align-items: center; gap: 10px; }
+        .loading-dots { display: flex; gap: 4px; align-items: center; }
+        .loading-dots span {
+            display: inline-block; width: 6px; height: 6px;
+            background: #ccc; border-radius: 50%; 
+            animation: dotPulse 1.2s ease-in-out infinite;
+        }
+        .loading-dots span:nth-child(2) { animation-delay: 0.2s; }
+        .loading-dots span:nth-child(3) { animation-delay: 0.4s; }
+        @keyframes dotPulse {
+            0%,80%,100% { transform: scale(0.6); background: #ccc; }
+            40% { transform: scale(1); background: #111; }
+        }
+        .no-results { padding: 48px; font-size: 13px; color: #888; }
+ 
+        .terms-overlay {
+            display: none; position: fixed; top: 0; left: 0;
+            width: 100%; height: 100%; background: rgba(0,0,0,0.5);
+            z-index: 2000; justify-content: center; align-items: flex-start;
+            padding: 60px 20px; overflow-y: auto;
+        }
+        .terms-overlay.active { display: flex; }
+        .terms-modal {
+            background: #fff; padding: 48px; max-width: 680px; width: 100%;
+            position: relative; border: 0.5px solid #ccc;
+        }
+        .terms-modal h2 { font-size: 16px; font-weight: 700; margin-bottom: 24px; letter-spacing: 0.04em; }
+        .terms-modal h3 { font-size: 13px; font-weight: 700; margin: 20px 0 8px; letter-spacing: 0.04em; }
+        .terms-modal p { font-size: 13px; color: #444; line-height: 1.75; margin-bottom: 12px; }
+        .terms-close { position: absolute; top: 20px; right: 24px; font-size: 18px; cursor: pointer; color: #666; transition: color 0.15s, transform 0.2s; }
+        .terms-close:hover { color: #111; transform: rotate(90deg); }
+    </style>
+</head>
+<body>
+ 
+<div id="progressBar"></div>
+ 
+<nav class="nav" id="mainNav">
+    <div class="nav-logo">
+        <div class="logo-mark">NL</div>
+        <span class="nav-logo-text">NEWSLENS</span>
+    </div>
+    <div class="nav-links">
+        <a href="chat.html">Chat</a>
+        <a href="#archive" onclick="document.getElementById('archive').scrollIntoView({behavior:'smooth'});return false;">Archive</a>
+        <a href="contact.html">Contact</a>
+    </div>
+</nav>
+ 
+<div class="hero">
+    <div class="hero-tag" style="display:flex;align-items:center;gap:16px;opacity:0;animation:fadeUp 0.5s ease forwards;">
+        <span>AI-Powered &middot; India &middot; Multi-Source</span>
+        <span id="liveIndicator" style="display:flex;align-items:center;gap:6px;background:#f0f0f0;padding:4px 12px;font-size:10px;letter-spacing:0.08em;">
+            <span id="liveDot" style="width:7px;height:7px;background:#ccc;border-radius:50%;display:inline-block;transition:background 0.3s;"></span>
+            <span id="liveText">checking...</span>
+        </span>
+    </div>
+    <div id="nextUpdateBar" style="font-size:11px;color:#888;margin-top:10px;letter-spacing:0.04em;display:none;">
+        Next update at <strong id="nextUpdateTime"></strong>
+    </div>
+    <h1>News without<br>the noise.</h1>
+    <p>Six sources. One summary. Every four hours, NewsLens reads the internet so you don't have to — pulling from NDTV, The Hindu, BBC, Indian Express, and more.</p>
+    <div class="hero-actions">
+        <a href="#news" class="btn-primary" onclick="document.getElementById('news').scrollIntoView({behavior:'smooth'});return false;">Read Today's News</a>
+        <a href="chat.html" class="btn-secondary">Join the Chat</a>
+    </div>
+</div>
+ 
+<div class="divider"></div>
+ 
+<div class="features">
+    <div class="feature">
+        <div class="feature-num">01</div>
+        <h3>Multi-source summaries</h3>
+        <p>Same story, six angles. See where sources agree and where they don't.</p>
+    </div>
+    <div class="feature">
+        <div class="feature-num">02</div>
+        <h3>Your prompt, your style</h3>
+        <p>Rewrite any summary in your own tone. Funny, formal, simple — your call.</p>
+    </div>
+    <div class="feature">
+        <div class="feature-num">03</div>
+        <h3>Community discussion</h3>
+        <p>One global room. Talk about what's happening with anonymous readers.</p>
+    </div>
+</div>
+ 
+<div class="how">
+    <span class="how-label">How it works</span>
+    <div class="how-list">
+        <div class="how-item">NewsLens collects articles from six major Indian and international outlets every four hours.</div>
+        <div class="how-item">Articles on the same topic are grouped together automatically.</div>
+        <div class="how-item">An AI reads all sources and writes one balanced paragraph — no agenda, no noise.</div>
+        <div class="how-item">Source links are always visible. You can always go deeper.</div>
+    </div>
+</div>
+ 
+<div class="search-section">
+    <div class="section-label">Search</div>
+    <div class="search-row">
+        <input type="text" id="searchInput" placeholder="Search any topic... rupee, IPL, election" />
+        <button onclick="searchNews()">Search</button>
+    </div>
+</div>
+ 
+<div class="news-section" id="news">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:36px;">
+        <div class="section-label" style="margin-bottom:0;" id="sectionLabel">Trending Today</div>
+        <span id="lastUpdatedLabel" style="font-size:11px;color:#888;letter-spacing:0.04em;"></span>
+    </div>
+    <div id="cardsGrid" class="cards-grid">
+        <div class="loading">Loading <div class="loading-dots"><span></span><span></span><span></span></div></div>
+    </div>
+</div>
+ 
+<div class="archive-section" id="archive">
+    <div class="section-label">Archive</div>
+    <div class="archive-row">
+        <input type="date" id="archiveDate" />
+        <button onclick="loadArchive()">View</button>
+    </div>
+    <div id="archiveResults"></div>
+</div>
+ 
+<footer class="footer">
+    <div class="footer-col">
+        <h4>NewsLens</h4>
+        <p>AI-powered balanced news summaries from multiple Indian and international sources.</p>
+        <p>Auto-updates every 4 hours.</p>
+    </div>
+    <div class="footer-col">
+        <h4>Links</h4>
+        <a href="#news" onclick="document.getElementById('news').scrollIntoView({behavior:'smooth'});return false;">Today's News</a>
+        <a href="#archive" onclick="document.getElementById('archive').scrollIntoView({behavior:'smooth'});return false;">Archive</a>
+        <a href="chat.html">Community Chat</a>
+        <a href="contact.html">Contact Us</a>
+    </div>
+    <div class="footer-col">
+        <h4>Legal</h4>
+        <a href="#" onclick="openTerms('terms');return false;">Terms of Use</a>
+        <a href="#" onclick="openTerms('privacy');return false;">Privacy Policy</a>
+    </div>
+</footer>
+ 
+<div class="footer-bottom">
+    <p>Copyright &copy; 2026 NewsLens. Made by Anonymous.</p>
+    <div style="display:flex;gap:24px;align-items:center;">
+        <a href="#" onclick="openTerms('terms');return false;">Terms of Use</a>
+        <a href="#" onclick="openTerms('privacy');return false;">Privacy Policy</a>
+        <button class="back-to-top" onclick="window.scrollTo({top:0,behavior:'smooth'})">Back to Top ↑</button>
+    </div>
+</div>
+ 
+<div class="modal-overlay" id="modalOverlay" onclick="closeModal(event)">
+    <div class="modal" id="modal">
+        <span class="modal-close" onclick="closeModalDirect()">&#x2715;</span>
+        <h2 id="modalTopic"></h2>
+        <div class="summary" id="modalSummary"></div>
+        <div class="custom-prompt-box" id="customPromptBox">
+            <button class="prompt-toggle-btn" onclick="togglePromptInput()">Set Your Prompt</button>
+            <div class="prompt-input-area" id="promptInputArea">
+                <textarea id="customPromptText" maxlength="200" placeholder="e.g. explain like a cricket commentator, summarize like a whatsapp forward..."></textarea>
+                <div class="prompt-actions">
+                    <span class="prompt-hint">1 free use &middot; resets after</span>
+                    <button class="prompt-submit" onclick="applyCustomPrompt()">Apply</button>
+                </div>
+            </div>
+        </div>
+        <div class="modal-label">Sources Used</div>
+        <div class="source-chips" id="modalSources"></div>
+        <div class="modal-label">Original Articles</div>
+        <div class="links-list" id="modalLinks"></div>
+    </div>
+</div>
+ 
+<div class="terms-overlay" id="termsOverlay" onclick="closeTerms(event)">
+    <div class="terms-modal" id="termsModal">
+        <span class="terms-close" onclick="closeTermsDirect()">&#x2715;</span>
+        <h2 id="termsTitle"></h2>
+        <div id="termsContent"></div>
+    </div>
+</div>
+ 
+<script>
+    const API = 'http://localhost:5000';
+ 
+    window.addEventListener('scroll', () => {
+        const scrollTop = window.scrollY;
+        const docHeight = document.body.scrollHeight - window.innerHeight;
+        document.getElementById('progressBar').style.width = (scrollTop / docHeight * 100) + '%';
+        const nav = document.getElementById('mainNav');
+        scrollTop > 50 ? nav.classList.add('scrolled') : nav.classList.remove('scrolled');
+    });
+ 
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                setTimeout(() => entry.target.classList.add('visible'), parseInt(entry.target.dataset.delay) || 0);
+                observer.unobserve(entry.target);
+            }
+        });
+    }, { threshold: 0.15 });
+ 
+    document.querySelectorAll('.feature, .how-item, .section-label').forEach((el, i) => {
+        el.dataset.delay = i * 80;
+        observer.observe(el);
+    });
+ 
+    function animateCards(targetId) {
+        document.querySelectorAll(`#${targetId} .card`).forEach((card, i) => {
+            setTimeout(() => card.classList.add('visible'), i * 60);
+        });
+    }
+ 
+    const TERMS_CONTENT = {
+        terms: {
+            title: 'Terms of Use',
+            body: `<h3>1. What NewsLens is</h3><p>NewsLens is an AI-powered news aggregator. We collect publicly available news from multiple sources and generate summarized versions using a local AI model. We are not a news publisher.</p><h3>2. Content accuracy</h3><p>Summaries are generated automatically and may contain errors. Always refer to original source links for full reporting.</p><h3>3. Community chat</h3><p>The chat is open and anonymous. You are responsible for what you post. Do not share personal information, hateful content, or misinformation.</p><h3>4. Custom prompts</h3><p>One free use is provided. Misuse to generate harmful content is not permitted.</p><h3>5. No warranties</h3><p>NewsLens is provided as-is with no guarantees about uptime or accuracy.</p>`
+        },
+        privacy: {
+            title: 'Privacy Policy',
+            body: `<h3>1. What we collect</h3><p>We do not collect personal information. The chat is fully anonymous.</p><h3>2. IP addresses</h3><p>Your IP is used temporarily for rate limiting chat only. Not stored permanently.</p><h3>3. Local storage</h3><p>Used only to remember if you've used your free custom prompt.</p><h3>4. Third party sources</h3><p>We fetch articles via public RSS feeds and always link back to originals.</p><h3>5. No tracking</h3><p>No analytics, cookies, or tracking tools of any kind.</p>`
+        }
+    };
+ 
+    function openTerms(type) {
+        document.getElementById('termsTitle').textContent = TERMS_CONTENT[type].title;
+        document.getElementById('termsContent').innerHTML = TERMS_CONTENT[type].body;
+        document.getElementById('termsOverlay').classList.add('active');
+    }
+    function closeTerms(e) { if (e.target === document.getElementById('termsOverlay')) closeTermsDirect(); }
+    function closeTermsDirect() { document.getElementById('termsOverlay').classList.remove('active'); }
+ 
+    async function loadTrending() {
+        try {
+            const res = await fetch(`${API}/api/trending`);
+            const data = await res.json();
+            renderCards(data, 'cardsGrid');
+            if (data.length > 0) {
+                const latest = new Date(data[0].created_at);
+                document.getElementById('lastUpdatedLabel').textContent = 'Last updated ' + latest.toLocaleTimeString('en-IN', {hour:'2-digit', minute:'2-digit'});
+            }
+            setTimeout(() => animateCards('cardsGrid'), 100);
+        } catch(e) {
+            document.getElementById('cardsGrid').innerHTML = '<div class="no-results">Could not load news. Make sure the server is running.</div>';
+        }
+    }
+ 
+    async function searchNews() {
+        const query = document.getElementById('searchInput').value.trim();
+        if (!query) { loadTrending(); return; }
+        document.getElementById('sectionLabel').textContent = `Results for "${query}"`;
+        document.getElementById('cardsGrid').innerHTML = '<div class="loading">Searching <div class="loading-dots"><span></span><span></span><span></span></div></div>';
+        const res = await fetch(`${API}/api/search?q=${encodeURIComponent(query)}`);
+        const data = await res.json();
+        if (data.length === 0) {
+            document.getElementById('cardsGrid').innerHTML = '<div class="no-results">No results found.</div>';
+        } else {
+            renderCards(data, 'cardsGrid');
+            setTimeout(() => animateCards('cardsGrid'), 100);
+        }
+    }
+ 
+    async function loadArchive() {
+        const date = document.getElementById('archiveDate').value;
+        if (!date) return;
+        document.getElementById('archiveResults').innerHTML = '<div class="loading">Loading <div class="loading-dots"><span></span><span></span><span></span></div></div>';
+        const res = await fetch(`${API}/api/archive?date=${date}`);
+        const data = await res.json();
+        if (data.length === 0) {
+            document.getElementById('archiveResults').innerHTML = '<div class="no-results">No summaries found for that date.</div>';
+        } else {
+            document.getElementById('archiveResults').innerHTML = '<div id="archiveGrid" class="cards-grid"></div>';
+            renderCards(data, 'archiveGrid');
+            setTimeout(() => animateCards('archiveGrid'), 100);
+        }
+    }
+ 
+    function renderCards(data, targetId) {
+        if (data.length === 0) {
+            document.getElementById(targetId).innerHTML = '<div class="no-results">No news available.</div>';
+            return;
+        }
+        document.getElementById(targetId).innerHTML = data.map(item => `
+            <div class="card" onclick="openModal(${item.id})">
+                <h3>${item.topic}</h3>
+                <p>${item.summary}</p>
+                <div class="card-meta">
+                    <span class="sources-count">${item.sources.length} source${item.sources.length > 1 ? 's' : ''}</span>
+                    <span class="card-time">${new Date(item.created_at).toLocaleTimeString('en-IN', {hour:'2-digit', minute:'2-digit'})}</span>
+                </div>
+            </div>
+        `).join('');
+    }
+ 
+    async function openModal(id) {
+        const overlay = document.getElementById('modalOverlay');
+        const res = await fetch(`${API}/api/summary/${id}`);
+        const item = await res.json();
+        document.getElementById('modal').dataset.summaryId = id;
+        document.getElementById('modalTopic').textContent = item.topic;
+        document.getElementById('modalSummary').textContent = item.summary;
+        document.getElementById('modalSources').innerHTML = item.sources.map(s => `<span class="source-chip">${s}</span>`).join('');
+        document.getElementById('modalLinks').innerHTML = item.links.map((l, i) => `<a href="${l}" target="_blank">Article ${i + 1} — ${item.sources[i] || 'Source'}</a>`).join('');
+        overlay.style.display = 'flex';
+        requestAnimationFrame(() => overlay.classList.add('active'));
+    }
+ 
+    function closeModal(e) { if (e.target === document.getElementById('modalOverlay')) closeModalDirect(); }
+    function closeModalDirect() {
+        const overlay = document.getElementById('modalOverlay');
+        overlay.classList.remove('active');
+        setTimeout(() => overlay.style.display = 'none', 200);
+    }
+ 
+    function togglePromptInput() {
+        const area = document.getElementById('promptInputArea');
+        area.style.display = area.style.display === 'none' || area.style.display === '' ? 'block' : 'none';
+    }
+ 
+    async function applyCustomPrompt() {
+        const used = localStorage.getItem('customPromptUsed');
+        if (used) { alert('Free usage done. Payment coming soon to unlock more.'); return; }
+        const instruction = document.getElementById('customPromptText').value.trim();
+        if (!instruction) { alert('Write something first'); return; }
+        const summaryId = document.getElementById('modal').dataset.summaryId;
+        if (!summaryId) return;
+        document.getElementById('modalSummary').innerHTML = 'Generating <span style="display:inline-flex;gap:4px;margin-left:4px;vertical-align:middle;"><span style="width:5px;height:5px;background:#ccc;border-radius:50%;display:inline-block;animation:dotPulse 1.2s infinite;"></span><span style="width:5px;height:5px;background:#ccc;border-radius:50%;display:inline-block;animation:dotPulse 1.2s infinite 0.2s;"></span><span style="width:5px;height:5px;background:#ccc;border-radius:50%;display:inline-block;animation:dotPulse 1.2s infinite 0.4s;"></span></span>';
+        const res = await fetch(`${API}/api/summarize/custom`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ summary_id: parseInt(summaryId), instruction })
+        });
+        const data = await res.json();
+        document.getElementById('modalSummary').textContent = data.summary;
+        localStorage.setItem('customPromptUsed', 'true');
+        document.getElementById('promptInputArea').style.display = 'none';
+    }
+ 
+    document.getElementById('searchInput').addEventListener('keypress', e => { if (e.key === 'Enter') searchNews(); });
+ 
+    async function checkStatus() {
+        try {
+            const res = await fetch(`${API}/api/status`);
+            const data = await res.json();
+            const dot = document.getElementById('liveDot');
+            const text = document.getElementById('liveText');
+            const bar = document.getElementById('nextUpdateBar');
+            const nextTime = document.getElementById('nextUpdateTime');
+            dot.style.background = '#111';
+            dot.style.boxShadow = '0 0 0 2px rgba(0,0,0,0.15)';
+            text.textContent = 'LIVE';
+            if (data.next_update) { bar.style.display = 'block'; nextTime.textContent = data.next_update; }
+        } catch(e) { document.getElementById('liveText').textContent = 'offline'; }
+    }
+ 
+    checkStatus();
+    loadTrending();
+</script>
+</body>
+</html>

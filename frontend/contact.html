@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NewsLens — Contact</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Courier New', monospace; background: #fff; color: #111; }
+
+        #progressBar {
+            position: fixed; top: 0; left: 0;
+            height: 2px; background: #111; width: 0%;
+            z-index: 9999; transition: width 0.1s linear;
+        }
+
+        .nav {
+            position: sticky; top: 0;
+            background: rgba(255,255,255,0.96);
+            backdrop-filter: blur(8px);
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 28px 48px; border-bottom: 0.5px solid #ccc;
+            z-index: 100; transition: padding 0.3s ease;
+        }
+        .nav.scrolled { padding: 16px 48px; }
+        .nav-logo { display: flex; align-items: center; gap: 12px; text-decoration: none; color: #111; }
+        .logo-mark {
+            width: 32px; height: 32px; background: #111;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 14px; color: #fff; font-weight: 700;
+            transition: transform 0.2s ease;
+        }
+        .nav-logo:hover .logo-mark { transform: rotate(6deg); }
+        .nav-logo-text { font-size: 15px; letter-spacing: 0.08em; font-weight: 700; }
+        .nav-back {
+            font-size: 13px; color: #333; text-decoration: none; letter-spacing: 0.04em;
+            position: relative; transition: color 0.2s;
+        }
+        .nav-back::after {
+            content: ''; position: absolute; bottom: -2px; left: 0;
+            width: 0; height: 0.5px; background: #111; transition: width 0.2s;
+        }
+        .nav-back:hover { color: #111; }
+        .nav-back:hover::after { width: 100%; }
+
+        .content {
+            padding: 80px 48px; max-width: 600px;
+        }
+        .tag {
+            font-size: 11px; letter-spacing: 0.12em; color: #666;
+            text-transform: uppercase; margin-bottom: 24px;
+            opacity: 0; animation: fadeUp 0.5s ease forwards 0.05s;
+        }
+        h1 {
+            font-size: 36px; font-weight: 400; letter-spacing: -0.02em; margin-bottom: 20px;
+            opacity: 0; animation: fadeUp 0.6s ease forwards 0.15s;
+        }
+        .sub {
+            font-size: 14px; color: #444; line-height: 1.75; margin-bottom: 56px;
+            opacity: 0; animation: fadeUp 0.6s ease forwards 0.25s;
+        }
+        @keyframes fadeUp {
+            from { opacity: 0; transform: translateY(16px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .contact-item {
+            display: flex; gap: 40px; padding: 28px 0;
+            border-bottom: 0.5px solid #eee; align-items: flex-start;
+            transition: border-color 0.2s;
+            opacity: 0; transform: translateY(12px);
+        }
+        .contact-item.visible { animation: fadeUp 0.45s ease forwards; }
+        .contact-item:hover { border-color: #ccc; }
+        .contact-label {
+            font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase;
+            color: #999; min-width: 100px; padding-top: 2px;
+            transition: color 0.2s;
+        }
+        .contact-item:hover .contact-label { color: #666; }
+        .contact-value { font-size: 13px; color: #333; line-height: 1.7; }
+        .contact-value a {
+            color: #111; text-decoration: underline; text-underline-offset: 3px;
+            transition: opacity 0.15s;
+        }
+        .contact-value a:hover { opacity: 0.6; }
+
+        .notice {
+            margin-top: 48px; padding: 24px;
+            border: 0.5px solid #e0e0e0;
+            font-size: 12px; color: #666; line-height: 1.75;
+            opacity: 0; animation: fadeUp 0.5s ease forwards 0.5s;
+            transition: border-color 0.2s;
+        }
+        .notice:hover { border-color: #bbb; }
+
+        .footer-bottom {
+            position: fixed; bottom: 0; left: 0; right: 0;
+            padding: 16px 48px; border-top: 0.5px solid #eee;
+            background: rgba(255,255,255,0.96);
+            backdrop-filter: blur(8px);
+            display: flex; justify-content: space-between;
+            font-size: 11px; color: #888; letter-spacing: 0.04em;
+        }
+    </style>
+</head>
+<body>
+
+<div id="progressBar"></div>
+
+<nav class="nav" id="mainNav">
+    <a class="nav-logo" href="index.html">
+        <div class="logo-mark">NL</div>
+        <span class="nav-logo-text">NEWSLENS</span>
+    </a>
+    <a class="nav-back" href="index.html">← Back to News</a>
+</nav>
+
+<div class="content">
+    <div class="tag">Contact</div>
+    <h1>Get in touch.</h1>
+    <p class="sub">NewsLens is an independent project. For feedback, issues, or anything else — reach out below. Response times may vary.</p>
+
+    <div class="contact-item">
+        <span class="contact-label">Status</span>
+        <span class="contact-value">Contact is currently pending setup. Check back soon.</span>
+    </div>
+    <div class="contact-item">
+        <span class="contact-label">For bugs</span>
+        <span class="contact-value">If something is broken, note the time it happened and which page you were on. That helps a lot.</span>
+    </div>
+    <div class="contact-item">
+        <span class="contact-label">For ideas</span>
+        <span class="contact-value">Features, source suggestions, or feedback on summaries — all welcome.</span>
+    </div>
+
+    <div class="notice">
+        Contact form is pending. This page will be updated once an email or form is set up.
+    </div>
+</div>
+
+<div class="footer-bottom">
+    <span>Copyright &copy; 2026 NewsLens. Made by Anonymous.</span>
+    <span>Auto-updates every 4 hours</span>
+</div>
+
+<script>
+    window.addEventListener('scroll', () => {
+        const nav = document.getElementById('mainNav');
+        const scrollTop = window.scrollY;
+        const docHeight = document.body.scrollHeight - window.innerHeight;
+        document.getElementById('progressBar').style.width = (scrollTop / docHeight * 100) + '%';
+        scrollTop > 30 ? nav.classList.add('scrolled') : nav.classList.remove('scrolled');
+    });
+
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach((entry, i) => {
+            if (entry.isIntersecting) {
+                setTimeout(() => entry.target.classList.add('visible'), i * 100);
+                observer.unobserve(entry.target);
+            }
+        });
+    }, { threshold: 0.15 });
+
+    document.querySelectorAll('.contact-item').forEach(el => observer.observe(el));
+</script>
+
+</body>
+</html>
