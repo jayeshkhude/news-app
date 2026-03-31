@@ -232,4 +232,17 @@ def status():
         'status': 'live'
     })
 if __name__ == "__main__":
-    app.run(debug=True, port=5000)
+    import threading
+    from backend.scheduler import run_pipeline
+    from apscheduler.schedulers.background import BackgroundScheduler
+
+    # Run pipeline once on startup
+    threading.Thread(target=run_pipeline).start()
+
+    # Schedule every 4 hours
+    scheduler = BackgroundScheduler()
+    scheduler.add_job(run_pipeline, 'interval', hours=4)
+    scheduler.start()
+
+    port = int(os.environ.get("PORT", 5000))
+    app.run(host="0.0.0.0", port=port)

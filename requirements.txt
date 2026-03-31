@@ -6,3 +6,4 @@ anthropic
 apscheduler
 scikit-learn
 sentence-transformers
+groq
