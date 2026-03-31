@@ -8,8 +8,12 @@ sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 from backend.database import get_connection
 from backend.prompts import get_prompt
 
-app = Flask(__name__)
+app = Flask(__name__, static_folder='../frontend', static_url_path='')
 CORS(app)
+
+@app.route('/')
+def index():
+    return app.send_static_file('index.html')
 
 @app.route('/api/trending', methods=['GET'])
 def get_trending():
