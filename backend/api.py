@@ -15,14 +15,9 @@ CORS(app)
 def index():
     return app.send_static_file('index.html')
 
-@app.route('/api/trending', methods=['GET'])
-def get_trending():
-    conn = get_connection()
-    cursor = conn.cursor()
-    cursor.execute('''
+cursor.execute('''
         SELECT id, topic, summary, sources, article_links, created_at
         FROM summaries
-        WHERE summary_date >= date('now', '-1 day')
         ORDER BY id DESC
         LIMIT 8
     ''')
@@ -147,13 +142,14 @@ def custom_summarize():
     articles_text = f"Topic: {row['topic']}\nExisting Summary: {row['summary']}"
     prompt = get_prompt(articles_text, custom_instruction)
 
-    response = req.post("http://localhost:11434/api/generate", json={
-        "model": "llama3.2:3b",
-        "prompt": prompt,
-        "stream": False
-    })
-
-    new_summary = response.json()['response']
+from groq import Groq
+client = Groq(api_key=os.environ.get("GROQ_API_KEY"))
+response = client.chat.completions.create(
+    model="llama-3.3-70b-versatile",
+    messages=[{"role": "user", "content": prompt}],
+    max_tokens=400
+)
+new_summary = response.choices[0].message.content    
 
     return jsonify({
         'topic': row['topic'],
@@ -225,10 +221,11 @@ def status():
     
     next_update = None
     if last_update:
-        from datetime import datetime, timedelta
-        last_dt = datetime.fromisoformat(last_update)
-        next_dt = last_dt + timedelta(hours=4)
-        next_update = next_dt.strftime("%I:%M %p")
+    from datetime import datetime, timedelta
+    last_dt = datetime.fromisoformat(last_update)
+    next_dt = last_dt + timedelta(hours=4)
+    next_dt_ist = next_dt + timedelta(hours=5, minutes=30)
+    next_update = next_dt_ist.strftime("%I:%M %p")
     
     return jsonify({
         'last_update': last_update,
