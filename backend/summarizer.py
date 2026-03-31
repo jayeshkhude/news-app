@@ -8,8 +8,10 @@ from backend.database import get_connection
 from backend.clusterer import cluster_articles
 from backend.prompts import get_prompt
 
-client = Groq(api_key=os.environ.get("GROQ_API_KEY"))
 MODEL = "llama-3.3-70b-versatile"
+
+def get_client():
+    return Groq(api_key=os.environ.get("GROQ_API_KEY"))
 
 def summarize_cluster(cluster, custom_instruction=None):
     articles = cluster['articles']
@@ -17,7 +19,7 @@ def summarize_cluster(cluster, custom_instruction=None):
     for a in articles:
         articles_text += f"Source: {a['source']}\nTitle: {a['title']}\nDescription: {a['description']}\n\n"
     prompt = get_prompt(articles_text, custom_instruction)
-    response = client.chat.completions.create(
+    response = get_client().chat.completions.create(
         model=MODEL,
         messages=[{"role": "user", "content": prompt}],
         max_tokens=400

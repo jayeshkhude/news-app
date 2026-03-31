@@ -10,6 +10,7 @@ from backend.database import init_db, get_connection
 from datetime import datetime
 
 def run_pipeline():
+    init_db()
     print(f"\n--- Pipeline Started at {datetime.now().strftime('%H:%M:%S')} ---")
     
     new_count = collect_articles()
