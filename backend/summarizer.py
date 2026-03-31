@@ -8,7 +8,7 @@ from backend.database import get_connection
 from backend.clusterer import cluster_articles
 from backend.prompts import get_prompt
 
-MODEL = "llama-3.3-70b-versatile"
+MODEL = "llama3-8b-8192"
 
 def get_client():
     return Groq(api_key=os.environ.get("GROQ_API_KEY"))

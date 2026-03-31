@@ -1,5 +1,6 @@
 from flask import Flask, jsonify, request
 from flask_cors import CORS
+from groq import Groq
 import json
 import os
 import sys
@@ -11,11 +12,18 @@ from backend.prompts import get_prompt
 app = Flask(__name__, static_folder='../frontend', static_url_path='')
 CORS(app)
 
+def get_groq_client():
+    return Groq(api_key=os.environ.get("GROQ_API_KEY"))
+
 @app.route('/')
 def index():
     return app.send_static_file('index.html')
 
-cursor.execute('''
+@app.route('/api/trending', methods=['GET'])
+def get_trending():
+    conn = get_connection()
+    cursor = conn.cursor()
+    cursor.execute('''
         SELECT id, topic, summary, sources, article_links, created_at
         FROM summaries
         ORDER BY id DESC
@@ -34,7 +42,6 @@ cursor.execute('''
             'links': json.loads(row['article_links']),
             'created_at': row['created_at']
         })
-
     return jsonify(result)
 
 @app.route('/api/summary/<int:summary_id>', methods=['GET'])
@@ -85,7 +92,6 @@ def search():
             'links': json.loads(row['article_links']),
             'created_at': row['created_at']
         })
-
     return jsonify(result)
 
 @app.route('/api/archive', methods=['GET'])
@@ -115,7 +121,6 @@ def get_archive():
             'links': json.loads(row['article_links']),
             'created_at': row['created_at']
         })
-
     return jsonify(result)
 
 @app.route('/api/summarize/custom', methods=['POST'])
@@ -142,14 +147,13 @@ def custom_summarize():
     articles_text = f"Topic: {row['topic']}\nExisting Summary: {row['summary']}"
     prompt = get_prompt(articles_text, custom_instruction)
 
-from groq import Groq
-client = Groq(api_key=os.environ.get("GROQ_API_KEY"))
-response = client.chat.completions.create(
-    model="llama-3.3-70b-versatile",
-    messages=[{"role": "user", "content": prompt}],
-    max_tokens=400
-)
-new_summary = response.choices[0].message.content    
+    client = get_groq_client()
+    response = client.chat.completions.create(
+        model="llama3-8b-8192",
+        messages=[{"role": "user", "content": prompt}],
+        max_tokens=400
+    )
+    new_summary = response.choices[0].message.content
 
     return jsonify({
         'topic': row['topic'],
@@ -208,39 +212,38 @@ def send_message():
     conn.close()
 
     return jsonify({'success': True})
+
 @app.route('/api/status', methods=['GET'])
 def status():
-    import time
     conn = get_connection()
     cursor = conn.cursor()
     cursor.execute('SELECT created_at FROM summaries ORDER BY id DESC LIMIT 1')
     row = cursor.fetchone()
     conn.close()
-    
+
     last_update = row['created_at'] if row else None
-    
+
     next_update = None
     if last_update:
-    from datetime import datetime, timedelta
-    last_dt = datetime.fromisoformat(last_update)
-    next_dt = last_dt + timedelta(hours=4)
-    next_dt_ist = next_dt + timedelta(hours=5, minutes=30)
-    next_update = next_dt_ist.strftime("%I:%M %p")
-    
+        from datetime import datetime, timedelta
+        last_dt = datetime.fromisoformat(last_update)
+        next_dt = last_dt + timedelta(hours=4)
+        next_dt_ist = next_dt + timedelta(hours=5, minutes=30)
+        next_update = next_dt_ist.strftime("%I:%M %p")
+
     return jsonify({
         'last_update': last_update,
         'next_update': next_update,
         'status': 'live'
     })
+
 if __name__ == "__main__":
     import threading
     from backend.scheduler import run_pipeline
     from apscheduler.schedulers.background import BackgroundScheduler
 
-    # Run pipeline once on startup
     threading.Thread(target=run_pipeline).start()
 
-    # Schedule every 4 hours
     scheduler = BackgroundScheduler()
     scheduler.add_job(run_pipeline, 'interval', hours=4)
     scheduler.start()
