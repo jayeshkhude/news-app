@@ -28,6 +28,7 @@ _load_local_env()
 
 from apscheduler.schedulers.blocking import BlockingScheduler
 from datetime import datetime
+from zoneinfo import ZoneInfo
 
 from backend.database import init_db
 from backend.pipeline import run_pipeline
@@ -37,7 +38,7 @@ if __name__ == "__main__":
     print("Running pipeline once on startup...")
     run_pipeline(force_summarize=False)
 
-    scheduler = BlockingScheduler()
+    scheduler = BlockingScheduler(timezone=ZoneInfo("Asia/Kolkata"))
     scheduler.add_job(
         lambda: run_pipeline(force_summarize=False),
         "cron",

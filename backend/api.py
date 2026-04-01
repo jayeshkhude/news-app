@@ -10,6 +10,7 @@ import sys
 import requests as req
 import time
 from datetime import datetime, timedelta, timezone
+from zoneinfo import ZoneInfo
 sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 from backend.database import get_connection, init_db
 from backend.prompts import get_prompt
@@ -97,6 +98,8 @@ def get_groq_client():
 def _now_iso():
     return datetime.now().isoformat(timespec="seconds")
 
+IST = ZoneInfo("Asia/Kolkata")
+
 
 def _created_at_iso_utc(value):
     """RFC3339 UTC for JSON. Naive DB timestamps are treated as UTC (Render/Linux default)."""
@@ -116,6 +119,12 @@ def _created_at_iso_utc(value):
         return dt.astimezone(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
     except ValueError:
         return raw_iso + "Z" if not raw_iso.endswith("Z") else raw_iso
+
+
+def _dt_iso_utc(dt: datetime) -> str:
+    if dt.tzinfo is None:
+        dt = dt.replace(tzinfo=timezone.utc)
+    return dt.astimezone(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
 
 def _client_key():
     forwarded = request.headers.get("X-Forwarded-For", "")
@@ -490,15 +499,18 @@ def send_message():
     return jsonify({'success': True})
 
 def _next_pipeline_run_after(now):
-    """Next run at 00:00, 04:00, 08:00, 12:00, 16:00, 20:00 (server local time)."""
-    today = now.date()
+    """Next run at 00:00, 04:00, 08:00, 12:00, 16:00, 20:00 Asia/Kolkata."""
+    if now.tzinfo is None:
+        now = now.replace(tzinfo=timezone.utc)
+    ist_now = now.astimezone(IST)
+    today = ist_now.date()
     for hour in (0, 4, 8, 12, 16, 20):
-        cand = datetime.combine(today, datetime.min.time()).replace(
+        cand = datetime.combine(today, datetime.min.time(), tzinfo=IST).replace(
             hour=hour, minute=0, second=0, microsecond=0
         )
-        if cand > now:
+        if cand > ist_now:
             return cand
-    return datetime.combine(today + timedelta(days=1), datetime.min.time())
+    return datetime.combine(today + timedelta(days=1), datetime.min.time(), tzinfo=IST)
 
 
 def _fmt_clock_12h(dt):
@@ -519,14 +531,14 @@ def status():
 
     last_update = _created_at_iso_utc(row["created_at"]) if row else None
 
-    now = datetime.now()
+    now = datetime.now(timezone.utc)
     next_dt = _next_pipeline_run_after(now)
     next_update = _fmt_clock_12h(next_dt)
 
     return jsonify({
         'last_update': last_update,
         'next_update': next_update,
-        'next_update_iso': next_dt.isoformat(timespec="seconds"),
+        'next_update_iso': _dt_iso_utc(next_dt),
         'status': 'live'
     })
 
