@@ -9,7 +9,7 @@ import os
 import sys
 import requests as req
 import time
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 from backend.database import get_connection, init_db
 from backend.prompts import get_prompt
@@ -97,6 +97,26 @@ def get_groq_client():
 def _now_iso():
     return datetime.now().isoformat(timespec="seconds")
 
+
+def _created_at_iso_utc(value):
+    """RFC3339 UTC for JSON. Naive DB timestamps are treated as UTC (Render/Linux default)."""
+    if value is None:
+        return None
+    raw = str(value).strip()
+    if not raw:
+        return None
+    try:
+        raw_iso = raw.replace(" ", "T", 1)
+        if raw_iso.endswith("Z"):
+            dt = datetime.fromisoformat(raw_iso.replace("Z", "+00:00"))
+        else:
+            dt = datetime.fromisoformat(raw_iso)
+        if dt.tzinfo is None:
+            dt = dt.replace(tzinfo=timezone.utc)
+        return dt.astimezone(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+    except ValueError:
+        return raw_iso + "Z" if not raw_iso.endswith("Z") else raw_iso
+
 def _client_key():
     forwarded = request.headers.get("X-Forwarded-For", "")
     if forwarded:
@@ -127,7 +147,7 @@ def _summary_public_dict(row):
         "summary": row["summary"],
         "sources": json.loads(row["sources"]),
         "links": _public_links_from_row(row),
-        "created_at": row["created_at"],
+        "created_at": _created_at_iso_utc(row["created_at"]),
         "category": _row_text(row["category"]) or None,
     }
 
@@ -212,9 +232,22 @@ def _not_found(_e):
 
 
 @app.after_request
-def _admin_no_cache(resp):
+def _api_cache_headers(resp):
     if request.path.startswith("/api/admin"):
         resp.headers["Cache-Control"] = "no-store, no-cache, must-revalidate, private"
+        resp.headers["Pragma"] = "no-cache"
+        return resp
+    if not request.path.startswith("/api/"):
+        return resp
+    reader_paths = {
+        "/api/trending",
+        "/api/titles",
+        "/api/status",
+        "/api/search",
+        "/api/archive",
+    }
+    if request.path in reader_paths or request.path.startswith("/api/summary/"):
+        resp.headers["Cache-Control"] = "no-store, max-age=0, must-revalidate"
         resp.headers["Pragma"] = "no-cache"
     return resp
 
@@ -269,7 +302,7 @@ def get_titles():
                 "id": r["id"],
                 "topic": r["topic"],
                 "headline": h or None,
-                "created_at": r["created_at"],
+                "created_at": _created_at_iso_utc(r["created_at"]),
             }
         )
     return jsonify(out)
@@ -484,7 +517,7 @@ def status():
     row = cursor.fetchone()
     conn.close()
 
-    last_update = row['created_at'] if row else None
+    last_update = _created_at_iso_utc(row["created_at"]) if row else None
 
     now = datetime.now()
     next_dt = _next_pipeline_run_after(now)
