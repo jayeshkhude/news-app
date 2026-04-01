@@ -1,37 +1,50 @@
 import sys
 import os
+
 sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 
+
+def _load_local_env():
+    repo_root = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+    dotenv_path = os.path.join(repo_root, ".env")
+    if not os.path.exists(dotenv_path):
+        return
+    try:
+        with open(dotenv_path, "r", encoding="utf-8") as f:
+            for raw_line in f:
+                line = raw_line.strip()
+                if not line or line.startswith("#") or "=" not in line:
+                    continue
+                key, value = line.split("=", 1)
+                key = key.strip()
+                value = value.strip().strip('"').strip("'")
+                if key and key not in os.environ:
+                    os.environ[key] = value
+    except OSError:
+        pass
+
+
+_load_local_env()
+
 from apscheduler.schedulers.blocking import BlockingScheduler
-from backend.collector import collect_articles
-from backend.clusterer import cluster_articles
-from backend.summarizer import run_summarizer
-from backend.database import init_db, get_connection
 from datetime import datetime
 
-def run_pipeline():
-    init_db()
-    print(f"\n--- Pipeline Started at {datetime.now().strftime('%H:%M:%S')} ---")
-    
-    new_count = collect_articles()
-    
-    if new_count == 0:
-        print("No new articles found, skipping summarization")
-        print("--- Pipeline Done ---\n")
-        return
-    
-    print(f"{new_count} new articles, running summarization...")
-    run_summarizer()
-    print("--- Pipeline Done ---\n")
+from backend.database import init_db
+from backend.pipeline import run_pipeline
 
 if __name__ == "__main__":
     init_db()
     print("Running pipeline once on startup...")
-    run_pipeline()
+    run_pipeline(force_summarize=False)
 
     scheduler = BlockingScheduler()
-    scheduler.add_job(run_pipeline, 'interval', hours=4)
-    print("Scheduler running. Next job in 4 hours.")
+    scheduler.add_job(
+        lambda: run_pipeline(force_summarize=False),
+        "cron",
+        hour="0,4,8,12,16,20",
+        minute=0,
+    )
+    print("Scheduler: collect + summarize every 4 hours (12am, 4am, 8am, 12pm, 4pm, 8pm).")
     print("Press Ctrl+C to stop.")
 
     try:

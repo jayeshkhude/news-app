@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NewsLens — Admin</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Courier New', monospace; background: #fff; color: #111; font-size: 15px; }
+
+        .nav {
+            position: sticky; top: 0;
+            background: rgba(255,255,255,0.96);
+            backdrop-filter: blur(8px);
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 28px 48px;
+            border-bottom: 0.5px solid #ccc;
+            z-index: 100;
+        }
+        .nav-logo { display: flex; align-items: center; gap: 12px; text-decoration: none; color: #111; }
+        .logo-mark {
+            width: 32px; height: 32px; background: #111;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 14px; color: #fff; font-weight: 700; letter-spacing: -1px;
+            transition: transform 0.2s ease;
+        }
+        .nav-logo:hover .logo-mark { transform: rotate(6deg); }
+        .nav-logo-text { font-size: 15px; letter-spacing: 0.08em; font-weight: 700; }
+        .nav-actions { display: flex; gap: 20px; align-items: center; }
+        .nav-actions a, .nav-actions button {
+            color: #333; text-decoration: none; font-size: 14px; letter-spacing: 0.04em;
+            background: none; border: none; cursor: pointer; font-family: inherit;
+        }
+        .nav-actions a:hover, .nav-actions button:hover { color: #111; }
+
+        .wrap { padding: 64px 48px; max-width: 980px; }
+        h1 { font-size: 20px; font-weight: 700; letter-spacing: 0.02em; margin-bottom: 10px; }
+        p { font-size: 14px; color: #444; line-height: 1.75; margin-bottom: 26px; }
+
+        .row { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; margin-bottom: 18px; }
+        button {
+            padding: 12px 18px; background: #111; color: #fff; border: none; cursor: pointer;
+            font-family: 'Courier New', monospace; font-size: 13px; letter-spacing: 0.06em;
+        }
+        button.secondary { background: transparent; color: #111; border: 0.5px solid #888; }
+        button:disabled { opacity: 0.5; cursor: not-allowed; }
+
+        .warn {
+            border: 0.5px solid #e0e0e0;
+            padding: 14px 16px;
+            font-size: 12px;
+            color: #666;
+            line-height: 1.7;
+            margin-bottom: 22px;
+        }
+
+        .list { border: 0.5px solid #ccc; }
+        .item {
+            display: grid;
+            grid-template-columns: 80px 1fr 140px;
+            gap: 18px;
+            padding: 16px 18px;
+            border-bottom: 0.5px solid #eee;
+            align-items: start;
+        }
+        .item:last-child { border-bottom: none; }
+        .id { font-size: 12px; color: #888; }
+        .msg { font-size: 13px; line-height: 1.7; color: #111; white-space: pre-wrap; overflow-wrap: anywhere; }
+        .time { font-size: 12px; color: #888; margin-top: 6px; }
+        .actions { display: flex; justify-content: flex-end; }
+        .actions button { padding: 10px 12px; font-size: 12px; }
+
+        .status { font-size: 12px; color: #888; margin-top: 14px; }
+
+        .section-title {
+            margin-top: 34px;
+            font-size: 13px;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+            color: #666;
+            margin-bottom: 12px;
+        }
+
+        .kv {
+            border: 0.5px solid #e0e0e0;
+            padding: 14px 16px;
+            font-size: 12px;
+            color: #666;
+            line-height: 1.8;
+            margin-bottom: 16px;
+        }
+        .kv b { color: #111; }
+
+        pre {
+            border: 0.5px solid #ccc;
+            padding: 16px 18px;
+            overflow: auto;
+            font-size: 12px;
+            line-height: 1.6;
+            color: #111;
+            background: #fafafa;
+            white-space: pre;
+        }
+
+        .danger { background: #b00020 !important; }
+    </style>
+</head>
+<body>
+<nav class="nav">
+    <a class="nav-logo" href="index.html">
+        <div class="logo-mark">NL</div>
+        <span class="nav-logo-text">NEWSLENS</span>
+    </a>
+    <div class="nav-actions">
+        <a href="chat.html">Chat</a>
+        <button type="button" onclick="logout()">Log out</button>
+    </div>
+</nav>
+
+<div class="wrap">
+    <h1>Admin panel</h1>
+    <p>Signed in with a server session. Use <strong>Log out</strong> when finished.</p>
+
+    <div class="warn">
+        - Destructive actions are permanent.<br>
+        - Set <code>ADMIN_TOKEN</code> (and optionally <code>FLASK_SECRET_KEY</code>) on the server.
+    </div>
+
+    <div class="section-title">Ingest &amp; summarize</div>
+    <div class="row">
+        <button type="button" class="secondary" onclick="runPipeline(false)">Scheduled-style run</button>
+        <button type="button" onclick="runPipeline(true)">Force summarize</button>
+    </div>
+    <div id="pipelineHint" class="status" style="margin-top:-8px;margin-bottom:18px;">
+        Scheduled-style: skips summarization if RSS added nothing. Force: always clusters and summarizes from articles in the database (duplicates same-day link sets are skipped).
+    </div>
+
+    <div class="row">
+        <button id="btnRefresh" onclick="refresh()">Refresh chat</button>
+        <button type="button" class="secondary" id="btnViewData" onclick="loadData()">View data</button>
+        <button type="button" class="secondary" id="btnDownload" onclick="downloadData()">Download data</button>
+        <button type="button" class="secondary" id="btnDeleteAllChat" onclick="deleteAll()">Delete all chat</button>
+        <button type="button" class="danger" id="btnPurge" onclick="purgeAllData()">Delete all data</button>
+    </div>
+
+    <div class="section-title">Database</div>
+    <div id="stats" class="kv">Not loaded.</div>
+    <pre id="dataDump" style="display:none;"></pre>
+
+    <div class="section-title">Chat messages</div>
+    <div id="list" class="list"></div>
+    <div id="status" class="status"></div>
+</div>
+
+<script>
+    const API = localStorage.getItem('API_BASE') || '';
+
+    function adminFetch(path, options = {}) {
+        const url = `${API}${path}`;
+        const { headers: h = {}, ...rest } = options;
+        return fetch(url, {
+            credentials: 'same-origin',
+            ...rest,
+            headers: h,
+        });
+    }
+
+    function redirectLogin() {
+        window.location.replace('admin-login.html');
+    }
+
+    function setStatus(text) {
+        document.getElementById('status').textContent = text || '';
+    }
+
+    async function safeJson(res) {
+        const ct = (res.headers.get('content-type') || '').toLowerCase();
+        if (!ct.includes('application/json')) {
+            return { _notJson: true };
+        }
+        return res.json();
+    }
+
+    async function requireSession(res) {
+        if (res.status === 401) {
+            redirectLogin();
+            return false;
+        }
+        return true;
+    }
+
+    async function logout() {
+        try {
+            await adminFetch('/api/admin/logout', { method: 'POST' });
+        } catch (e) { /* ignore */ }
+        redirectLogin();
+    }
+
+    async function runPipeline(force) {
+        const hint = document.getElementById('pipelineHint');
+        hint.textContent = 'Starting pipeline in the background… watch the server console. This can take a minute.';
+        try {
+            const res = await adminFetch('/api/admin/run-pipeline', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ force })
+            });
+            if (!(await requireSession(res))) return;
+            const data = await safeJson(res);
+            if (!res.ok) {
+                hint.textContent = (data && data.error) ? data.error : 'Could not start pipeline.';
+                return;
+            }
+            hint.textContent = 'Pipeline started. Refresh the homepage trending section after it finishes. Force=' + (data.force ? 'yes' : 'no');
+        } catch (e) {
+            hint.textContent = 'Could not reach server.';
+        }
+    }
+
+    async function loadData() {
+        setStatus('Loading DB data…');
+        document.getElementById('dataDump').style.display = 'none';
+
+        try {
+            const statsRes = await adminFetch('/api/admin/stats');
+            if (!(await requireSession(statsRes))) return;
+            const statsData = await safeJson(statsRes);
+            if (statsData._notJson) { setStatus('Server error (not JSON).'); return; }
+            if (!statsRes.ok) { setStatus(statsData.error || 'Failed to load stats.'); return; }
+
+            document.getElementById('stats').innerHTML =
+                `<b>Articles:</b> ${statsData.articles}<br>` +
+                `<b>Summaries:</b> ${statsData.summaries}<br>` +
+                `<b>Chat messages:</b> ${statsData.chat_messages}<br>` +
+                `<b>Custom prompt uses:</b> ${statsData.custom_prompt_uses}`;
+
+            const latestRes = await adminFetch('/api/admin/latest?limit=20');
+            if (!(await requireSession(latestRes))) return;
+            const latestData = await safeJson(latestRes);
+            if (latestData._notJson) { setStatus('Server error (not JSON).'); return; }
+            if (!latestRes.ok) { setStatus(latestData.error || 'Failed to load latest rows.'); return; }
+
+            const dump = document.getElementById('dataDump');
+            dump.textContent = JSON.stringify(latestData, null, 2);
+            dump.style.display = 'block';
+            setStatus('Loaded DB data.');
+        } catch (e) {
+            setStatus('Could not load DB data.');
+        }
+    }
+
+    async function refresh() {
+        setStatus('Loading…');
+        try {
+            const ping = await adminFetch('/api/admin/ping');
+            if (!(await requireSession(ping))) return;
+            const pingData = await safeJson(ping);
+            if (!ping.ok || pingData._notJson) {
+                setStatus('Session invalid.');
+                redirectLogin();
+                return;
+            }
+        } catch (e) {
+            setStatus('Could not verify session.');
+            return;
+        }
+
+        try {
+            const res = await adminFetch('/api/admin/chat/messages');
+            if (!(await requireSession(res))) return;
+            const data = await safeJson(res);
+            if (!res.ok) {
+                setStatus((data && data.error) ? data.error : ('Could not load chat (HTTP ' + res.status + ').'));
+                return;
+            }
+            if (data._notJson || !Array.isArray(data)) {
+                setStatus('Invalid response from server.');
+                return;
+            }
+
+            const list = document.getElementById('list');
+            list.innerHTML = '';
+
+            if (!data.length) {
+                const empty = document.createElement('div');
+                empty.className = 'item';
+                empty.textContent = 'No messages.';
+                list.appendChild(empty);
+                setStatus('');
+                return;
+            }
+
+            data.slice().reverse().forEach(m => {
+                const row = document.createElement('div');
+                row.className = 'item';
+
+                const id = document.createElement('div');
+                id.className = 'id';
+                id.textContent = `#${m.id}`;
+
+                const msgWrap = document.createElement('div');
+                const msg = document.createElement('div');
+                msg.className = 'msg';
+                msg.textContent = m.message;
+                const time = document.createElement('div');
+                time.className = 'time';
+                time.textContent = new Date(m.sent_at).toLocaleString('en-IN', { hour: '2-digit', minute: '2-digit', year:'numeric', month:'short', day:'2-digit' });
+                msgWrap.appendChild(msg);
+                msgWrap.appendChild(time);
+
+                const actions = document.createElement('div');
+                actions.className = 'actions';
+                const del = document.createElement('button');
+                del.textContent = 'Delete';
+                del.style.background = '#111';
+                del.onclick = () => deleteOne(m.id);
+                actions.appendChild(del);
+
+                row.appendChild(id);
+                row.appendChild(msgWrap);
+                row.appendChild(actions);
+                list.appendChild(row);
+            });
+
+            setStatus(`Loaded ${data.length} messages.`);
+        } catch (e) {
+            setStatus('Could not load chat messages.');
+        }
+    }
+
+    async function deleteOne(id) {
+        if (!confirm(`Delete message #${id}?`)) return;
+        setStatus('Deleting…');
+        try {
+            const res = await adminFetch(`/api/admin/chat/delete/${id}`, { method: 'POST' });
+            if (!(await requireSession(res))) return;
+            const data = await res.json();
+            if (!res.ok) { setStatus(data.error || 'Delete failed.'); return; }
+            await refresh();
+        } catch (e) {
+            setStatus('Delete failed.');
+        }
+    }
+
+    async function deleteAll() {
+        if (!confirm('Delete ALL chat messages permanently?')) return;
+        setStatus('Deleting all…');
+        try {
+            const res = await adminFetch('/api/admin/chat/delete_all', { method: 'POST' });
+            if (!(await requireSession(res))) return;
+            const data = await res.json();
+            if (!res.ok) { setStatus(data.error || 'Delete failed.'); return; }
+            await refresh();
+        } catch (e) {
+            setStatus('Delete all failed.');
+        }
+    }
+
+    async function downloadData() {
+        setStatus('Preparing download…');
+        try {
+            const res = await adminFetch('/api/admin/export-file?all=1');
+            if (!(await requireSession(res))) return;
+            if (!res.ok) {
+                const err = await safeJson(res);
+                setStatus((err && !err._notJson && err.error) ? err.error : 'Export failed.');
+                return;
+            }
+            const blob = await res.blob();
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            const ts = new Date().toISOString().replace(/:/g, '-');
+            a.href = url;
+            a.download = `newslens-export-${ts}.json`;
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+            URL.revokeObjectURL(url);
+            setStatus('Download started (JSON file).');
+        } catch (e) {
+            setStatus('Export failed.');
+        }
+    }
+
+    async function purgeAllData() {
+        const phrase = prompt('Type exactly: delete will be permanent');
+        if (!phrase) return;
+        setStatus('Purging…');
+        try {
+            const res = await adminFetch('/api/admin/purge', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ confirm: phrase })
+            });
+            if (!(await requireSession(res))) return;
+            const data = await res.json();
+            if (!res.ok) { setStatus(data.error || 'Purge failed.'); return; }
+            document.getElementById('stats').textContent = 'Not loaded.';
+            document.getElementById('dataDump').style.display = 'none';
+            await refresh();
+            setStatus('All data deleted permanently.');
+        } catch (e) {
+            setStatus('Purge failed.');
+        }
+    }
+
+    (async function initAdmin() {
+        document.getElementById('stats').textContent = 'Not loaded.';
+        document.getElementById('dataDump').style.display = 'none';
+        document.getElementById('dataDump').textContent = '';
+        try {
+            const r = await adminFetch('/api/admin/ping');
+            if (r.status === 401) {
+                redirectLogin();
+                return;
+            }
+            if (!r.ok) {
+                setStatus('Admin unavailable.');
+                return;
+            }
+        } catch (e) {
+            redirectLogin();
+            return;
+        }
+        await refresh();
+    })();
+</script>
+</body>
+</html>

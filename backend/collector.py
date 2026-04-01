@@ -15,6 +15,15 @@ RSS_FEEDS = {
     "BBC India": "https://feeds.bbci.co.uk/news/world/asia/india/rss.xml",
 }
 
+
+def _feed_text(x):
+    if x is None:
+        return ""
+    if isinstance(x, list):
+        return " ".join(str(i) for i in x).strip()
+    return str(x).strip()
+
+
 def collect_articles():
     conn = get_connection()
     cursor = conn.cursor()
@@ -25,9 +34,9 @@ def collect_articles():
         try:
             feed = feedparser.parse(url)
             for entry in feed.entries[:10]:
-                title = entry.get('title', '')
-                link = entry.get('link', '')
-                description = entry.get('summary', '')
+                title = _feed_text(entry.get("title", ""))
+                link = _feed_text(entry.get("link", ""))
+                description = _feed_text(entry.get("summary", ""))
                 published = entry.get('published', str(datetime.now()))
 
                 try:
