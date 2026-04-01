@@ -16,10 +16,7 @@ from backend.database import get_connection, init_db
 from backend.prompts import get_prompt
 
 def _load_local_env():
-    """
-    Load a local .env file (project root) for local development.
-    Does not override already-exported environment variables.
-    """
+    
     repo_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
     dotenv_path = os.path.join(repo_root, '.env')
     if not os.path.exists(dotenv_path):
@@ -96,7 +93,7 @@ def get_groq_client():
     return Groq(api_key=os.environ.get("GROQ_API_KEY"))
 
 def _now_iso():
-    return datetime.now().isoformat(timespec="seconds")
+    return datetime.now(IST).isoformat(timespec="seconds")
 
 IST = ZoneInfo("Asia/Kolkata")
 
@@ -115,7 +112,7 @@ def _created_at_iso_utc(value):
         else:
             dt = datetime.fromisoformat(raw_iso)
         if dt.tzinfo is None:
-            dt = dt.replace(tzinfo=timezone.utc)
+            dt = dt.replace(tzinfo=IST)
         return dt.astimezone(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
     except ValueError:
         return raw_iso + "Z" if not raw_iso.endswith("Z") else raw_iso
@@ -123,7 +120,7 @@ def _created_at_iso_utc(value):
 
 def _dt_iso_utc(dt: datetime) -> str:
     if dt.tzinfo is None:
-        dt = dt.replace(tzinfo=timezone.utc)
+        dt = dt.replace(tzinfo=IST)
     return dt.astimezone(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
 
 def _client_key():
@@ -800,6 +797,23 @@ def admin_purge():
     conn.commit()
     conn.close()
     return jsonify({'success': True, 'deleted': {'articles': a, 'summaries': s, 'chat_messages': c, 'custom_prompt_uses': u}})
+
+@app.route('/api/cron/run', methods=['GET'])
+def cron_run():
+    secret = request.args.get('secret', '')
+    expected = os.environ.get('CRON_SECRET', '')
+    if expected and secret != expected:
+        return jsonify({'error': 'unauthorized'}), 401
+
+    def _job():
+        try:
+            from backend.pipeline import run_pipeline
+            run_pipeline(force_summarize=False)
+        except Exception as e:
+            print(f"Cron error: {e}")
+
+    threading.Thread(target=_job, daemon=True).start()
+    return jsonify({'ok': True, 'started': True})
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))

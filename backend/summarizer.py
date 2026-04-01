@@ -4,7 +4,8 @@ import json
 import re
 from groq import Groq
 from datetime import datetime
-
+from zoneinfo import ZoneInfo
+IST = ZoneInfo("Asia/Kolkata")
 sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 from backend.database import get_connection
 from backend.clusterer import cluster_articles
@@ -189,7 +190,7 @@ def run_summarizer(custom_instruction=None):
                     summary,
                     json.dumps(sources),
                     json.dumps(link_items),
-                    str(datetime.now()),
+                    str(datetime.now(IST)),
                     today,
                     _text_field(cluster.get("category")) or "other",
                     0,

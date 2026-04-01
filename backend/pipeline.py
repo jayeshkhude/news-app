@@ -1,6 +1,4 @@
-"""
-Collect → cluster → summarize → rank. Used by scheduler and admin/CLI.
-"""
+
 import os
 import sys
 from datetime import datetime
