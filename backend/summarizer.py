@@ -150,7 +150,7 @@ def run_summarizer(custom_instruction=None):
         return
     conn = get_connection()
     cursor = conn.cursor()
-    today = str(datetime.now().date())
+    today = str(datetime.now(IST).date())
     inserted = 0
     for cluster in clusters:
         topic_label = _text_field(cluster.get("topic"))
