@@ -6,7 +6,7 @@
     <title>NewsLens</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: 'Courier New', monospace; background: #fff; color: #111; font-size: 15px; }
+        body { font-family: 'Courier New', monospace; background: #fff; color: #111; font-size: 17px; line-height: 1.55; }
  
         #progressBar {
             position: fixed; top: 0; left: 0;
@@ -33,10 +33,10 @@
             transition: transform 0.2s ease;
         }
         .nav-logo:hover .logo-mark { transform: rotate(6deg); }
-        .nav-logo-text { font-size: 15px; letter-spacing: 0.08em; font-weight: 700; }
+        .nav-logo-text { font-size: 16px; letter-spacing: 0.08em; font-weight: 700; }
         .nav-links { display: flex; gap: 32px; align-items: center; }
         .nav-links a {
-            font-size: 14px; color: #333; text-decoration: none; letter-spacing: 0.04em;
+            font-size: 16px; color: #333; text-decoration: none; letter-spacing: 0.04em;
             position: relative;
         }
         .ticker {
@@ -67,7 +67,7 @@
             display: inline-block;
             padding-left: 100%;
             animation: tickerMove 70s linear infinite;
-            font-size: 13px;
+            font-size: 15px;
             letter-spacing: 0.02em;
         }
         @keyframes tickerMove {
@@ -81,29 +81,50 @@
         .nav-links a:hover::after { width: 100%; }
         .nav-links a:hover { color: #111; }
  
-        .hero { padding: 100px 48px 80px; max-width: 760px; }
-        .hero-tag { font-size: 11px; letter-spacing: 0.12em; color: #666; text-transform: uppercase; margin-bottom: 28px; }
-        .hero h1 {
-            font-size: 42px; font-weight: 400; line-height: 1.15;
+        .hero-row {
+            display: grid;
+            grid-template-columns: 1fr minmax(260px, 340px);
+            gap: 56px;
+            align-items: center;
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 96px 48px 72px;
+        }
+        .hero-copy { max-width: 620px; }
+        .hero-tag { font-size: 12px; letter-spacing: 0.12em; color: #666; text-transform: uppercase; margin-bottom: 28px; }
+        .hero-row h1 {
+            font-size: clamp(28px, 4vw, 44px); font-weight: 400; line-height: 1.15;
             letter-spacing: -0.02em; margin-bottom: 24px; color: #111;
             opacity: 0; transform: translateY(20px);
             animation: fadeUp 0.7s ease forwards 0.1s;
         }
-        .hero p {
-            font-size: 16px; color: #444; line-height: 1.75;
-            max-width: 540px; margin-bottom: 40px;
+        .hero-row p {
+            font-size: 18px; color: #444; line-height: 1.75;
+            max-width: 560px; margin-bottom: 40px;
             opacity: 0; transform: translateY(20px);
             animation: fadeUp 0.7s ease forwards 0.25s;
         }
         .hero-actions {
-            display: flex; gap: 16px;
+            display: flex; gap: 16px; flex-wrap: wrap;
             opacity: 0; transform: translateY(20px);
             animation: fadeUp 0.7s ease forwards 0.4s;
+        }
+        .hero-art {
+            width: 100%;
+            max-width: 340px;
+            margin: 0 auto;
+            opacity: 0;
+            animation: fadeUp 0.8s ease forwards 0.35s;
+        }
+        .hero-art svg { width: 100%; height: auto; display: block; }
+        @media (max-width: 900px) {
+            .hero-row { grid-template-columns: 1fr; padding: 80px 32px 56px; gap: 40px; }
+            .hero-art { order: -1; max-width: 280px; }
         }
         @keyframes fadeUp { to { opacity: 1; transform: translateY(0); } }
  
         .btn-primary {
-            font-family: 'Courier New', monospace; font-size: 13px; padding: 12px 28px;
+            font-family: 'Courier New', monospace; font-size: 15px; padding: 14px 28px;
             background: #111; color: #fff; border: none; cursor: pointer;
             letter-spacing: 0.06em; text-decoration: none; display: inline-block;
             transition: background 0.2s, transform 0.15s;
@@ -111,7 +132,7 @@
         .btn-primary:hover { background: #333; transform: translateY(-1px); }
         .btn-primary:active { transform: translateY(0); }
         .btn-secondary {
-            font-family: 'Courier New', monospace; font-size: 13px; padding: 12px 28px;
+            font-family: 'Courier New', monospace; font-size: 15px; padding: 14px 28px;
             background: transparent; color: #111; border: 0.5px solid #888; cursor: pointer;
             letter-spacing: 0.06em; text-decoration: none; display: inline-block;
             transition: border-color 0.2s, transform 0.15s;
@@ -131,15 +152,15 @@
         .feature:nth-child(3).visible { animation-delay: 0.2s; }
         .feature:last-child { border-right: none; }
         .feature:hover { background: #fafafa; }
-        .feature-num { font-size: 11px; color: #999; letter-spacing: 0.1em; margin-bottom: 20px; }
-        .feature h3 { font-size: 14px; font-weight: 700; margin-bottom: 10px; letter-spacing: 0.02em; color: #111; }
-        .feature p { font-size: 14px; color: #444; line-height: 1.7; }
+        .feature-num { font-size: 12px; color: #999; letter-spacing: 0.1em; margin-bottom: 20px; }
+        .feature h3 { font-size: 16px; font-weight: 700; margin-bottom: 10px; letter-spacing: 0.02em; color: #111; }
+        .feature p { font-size: 16px; color: #444; line-height: 1.7; }
  
         .how { padding: 64px 48px; border-bottom: 0.5px solid #ccc; display: flex; gap: 80px; }
-        .how-label { font-size: 11px; letter-spacing: 0.1em; color: #666; text-transform: uppercase; min-width: 120px; padding-top: 3px; }
+        .how-label { font-size: 12px; letter-spacing: 0.1em; color: #666; text-transform: uppercase; min-width: 120px; padding-top: 3px; }
         .how-list { display: flex; flex-direction: column; gap: 16px; }
         .how-item {
-            font-size: 14px; color: #333; line-height: 1.7;
+            font-size: 16px; color: #333; line-height: 1.7;
             border-left: 1px solid #ccc; padding-left: 20px;
             transition: border-color 0.2s, color 0.2s;
             opacity: 0; transform: translateX(-10px);
@@ -158,18 +179,18 @@
         }
         .search-row:focus-within { border-color: #111; box-shadow: 3px 3px 0 #111; }
         .search-row input {
-            flex: 1; padding: 14px 20px; border: none; outline: none;
-            font-family: 'Courier New', monospace; font-size: 14px; color: #111; background: #fff;
+            flex: 1; padding: 16px 20px; border: none; outline: none;
+            font-family: 'Courier New', monospace; font-size: 16px; color: #111; background: #fff;
         }
         .search-row button {
-            padding: 14px 28px; background: #111; color: #fff; border: none; cursor: pointer;
-            font-family: 'Courier New', monospace; font-size: 13px; letter-spacing: 0.06em;
+            padding: 16px 28px; background: #111; color: #fff; border: none; cursor: pointer;
+            font-family: 'Courier New', monospace; font-size: 15px; letter-spacing: 0.06em;
             transition: background 0.2s;
         }
         .search-row button:hover { background: #333; }
  
         .section-label {
-            font-size: 11px; letter-spacing: 0.12em; color: #666;
+            font-size: 12px; letter-spacing: 0.12em; color: #666;
             text-transform: uppercase; margin-bottom: 36px;
             opacity: 0;
         }
@@ -184,11 +205,22 @@
         }
         .card.visible { animation: fadeUp 0.4s ease forwards; }
         .card:hover { background: #f9f9f9; transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.06); z-index: 1; position: relative; }
-        .card h3 { font-size: 13px; font-weight: 700; margin-bottom: 12px; line-height: 1.5; color: #111; letter-spacing: 0.01em; }
-        .card p { font-size: 13px; color: #444; line-height: 1.75; margin-bottom: 16px; display: -webkit-box; -webkit-line-clamp: 3; line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+        .card h3 { font-size: 17px; font-weight: 700; margin-bottom: 12px; line-height: 1.45; color: #111; letter-spacing: 0.01em; }
+        .card p { font-size: 16px; color: #444; line-height: 1.75; margin-bottom: 16px; display: -webkit-box; -webkit-line-clamp: 4; line-clamp: 4; -webkit-box-orient: vertical; overflow: hidden; }
         .card-meta { display: flex; justify-content: space-between; }
-        .sources-count { font-size: 11px; color: #666; letter-spacing: 0.04em; }
-        .card-time { font-size: 11px; color: #888; }
+        .sources-count { font-size: 13px; color: #666; letter-spacing: 0.04em; }
+        .card-time { font-size: 13px; color: #888; }
+
+        .articles-section { padding: 48px 48px 64px; border-bottom: 0.5px solid #ccc; }
+        .articles-feed { border: 0.5px solid #ccc; background: #fff; }
+        .article-row {
+            display: block; padding: 16px 20px; border-bottom: 0.5px solid #eee;
+            text-decoration: none; color: inherit; transition: background 0.15s;
+        }
+        .article-row:hover { background: #fafafa; }
+        .article-row:last-child { border-bottom: none; }
+        .article-title { font-size: 16px; font-weight: 700; line-height: 1.45; margin-bottom: 8px; color: #111; }
+        .article-meta { font-size: 15px; color: #666; letter-spacing: 0.02em; }
  
         .archive-section { padding: 48px; border-bottom: 0.5px solid #ccc; }
         .archive-row {
@@ -197,12 +229,12 @@
         }
         .archive-row:focus-within { border-color: #111; box-shadow: 3px 3px 0 #111; }
         .archive-row input {
-            flex: 1; padding: 14px 20px; border: none; outline: none;
-            font-family: 'Courier New', monospace; font-size: 14px; color: #111; background: #fff;
+            flex: 1; padding: 16px 20px; border: none; outline: none;
+            font-family: 'Courier New', monospace; font-size: 16px; color: #111; background: #fff;
         }
         .archive-row button {
-            padding: 14px 28px; background: #111; color: #fff; border: none; cursor: pointer;
-            font-family: 'Courier New', monospace; font-size: 13px; letter-spacing: 0.06em;
+            padding: 16px 28px; background: #111; color: #fff; border: none; cursor: pointer;
+            font-family: 'Courier New', monospace; font-size: 15px; letter-spacing: 0.06em;
             transition: background 0.2s;
         }
         .archive-row button:hover { background: #333; }
@@ -228,17 +260,17 @@
             transition: color 0.15s, transform 0.2s;
         }
         .modal-close:hover { color: #111; transform: rotate(90deg); }
-        .modal h2 { font-size: 16px; font-weight: 700; margin-bottom: 20px; line-height: 1.5; padding-right: 30px; color: #111; }
-        .modal .summary { font-size: 15px; line-height: 1.9; color: #333; margin-bottom: 32px; }
-        .modal-label { font-size: 11px; letter-spacing: 0.1em; color: #666; text-transform: uppercase; margin-bottom: 12px; }
+        .modal h2 { font-size: 19px; font-weight: 700; margin-bottom: 20px; line-height: 1.45; padding-right: 30px; color: #111; }
+        .modal .summary { font-size: 17px; line-height: 1.9; color: #333; margin-bottom: 32px; }
+        .modal-label { font-size: 12px; letter-spacing: 0.1em; color: #666; text-transform: uppercase; margin-bottom: 12px; }
         .source-chips { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 24px; }
         .source-chip {
-            font-size: 11px; color: #333; border: 0.5px solid #bbb; padding: 5px 14px;
+            font-size: 13px; color: #333; border: 0.5px solid #bbb; padding: 6px 14px;
             letter-spacing: 0.04em; transition: border-color 0.15s, color 0.15s; cursor: default;
         }
         .source-chip:hover { border-color: #111; color: #111; }
         .links-list { display: flex; flex-direction: column; gap: 10px; }
-        .links-list a { font-size: 14px; color: #111; text-decoration: underline; text-underline-offset: 3px; transition: opacity 0.15s; }
+        .links-list a { font-size: 16px; color: #111; text-decoration: underline; text-underline-offset: 3px; transition: opacity 0.15s; }
         .links-list a:hover { opacity: 0.6; }
  
         .custom-prompt-box { margin-bottom: 24px; border-top: 0.5px solid #eee; padding-top: 20px; }
@@ -268,24 +300,24 @@
             padding: 48px; border-top: 0.5px solid #ccc;
             display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 32px;
         }
-        .footer-col h4 { font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; color: #999; margin-bottom: 16px; }
-        .footer-col a, .footer-col p { font-size: 12px; color: #555; text-decoration: none; display: block; margin-bottom: 8px; line-height: 1.6; transition: color 0.15s; }
+        .footer-col h4 { font-size: 12px; letter-spacing: 0.1em; text-transform: uppercase; color: #999; margin-bottom: 16px; }
+        .footer-col a, .footer-col p { font-size: 14px; color: #555; text-decoration: none; display: block; margin-bottom: 8px; line-height: 1.6; transition: color 0.15s; }
         .footer-col a:hover { color: #111; }
         .footer-bottom {
             padding: 20px 48px; border-top: 0.5px solid #eee;
             display: flex; justify-content: space-between; align-items: center;
         }
-        .footer-bottom p { font-size: 11px; color: #888; letter-spacing: 0.04em; }
-        .footer-bottom a { font-size: 11px; color: #888; text-decoration: none; letter-spacing: 0.04em; transition: color 0.15s; }
+        .footer-bottom p { font-size: 13px; color: #888; letter-spacing: 0.04em; }
+        .footer-bottom a { font-size: 13px; color: #888; text-decoration: none; letter-spacing: 0.04em; transition: color 0.15s; }
         .footer-bottom a:hover { color: #111; }
         .back-to-top {
-            font-size: 11px; color: #888; cursor: pointer; letter-spacing: 0.06em;
+            font-size: 13px; color: #888; cursor: pointer; letter-spacing: 0.06em;
             text-transform: uppercase; background: none; border: none;
             font-family: 'Courier New', monospace; transition: color 0.15s, transform 0.2s;
         }
         .back-to-top:hover { color: #111; transform: translateY(-2px); }
  
-        .loading { padding: 48px; font-size: 13px; color: #666; letter-spacing: 0.04em; display: flex; align-items: center; gap: 10px; }
+        .loading { padding: 48px; font-size: 16px; color: #666; letter-spacing: 0.04em; display: flex; align-items: center; gap: 10px; }
         .loading-dots { display: flex; gap: 4px; align-items: center; }
         .loading-dots span {
             display: inline-block; width: 6px; height: 6px;
@@ -298,7 +330,7 @@
             0%,80%,100% { transform: scale(0.6); background: #ccc; }
             40% { transform: scale(1); background: #111; }
         }
-        .no-results { padding: 48px; font-size: 13px; color: #888; }
+        .no-results { padding: 48px; font-size: 16px; color: #888; }
  
         .terms-overlay {
             display: none; position: fixed; top: 0; left: 0;
@@ -311,9 +343,9 @@
             background: #fff; padding: 48px; max-width: 680px; width: 100%;
             position: relative; border: 0.5px solid #ccc;
         }
-        .terms-modal h2 { font-size: 16px; font-weight: 700; margin-bottom: 24px; letter-spacing: 0.04em; }
-        .terms-modal h3 { font-size: 13px; font-weight: 700; margin: 20px 0 8px; letter-spacing: 0.04em; }
-        .terms-modal p { font-size: 13px; color: #444; line-height: 1.75; margin-bottom: 12px; }
+        .terms-modal h2 { font-size: 19px; font-weight: 700; margin-bottom: 24px; letter-spacing: 0.04em; }
+        .terms-modal h3 { font-size: 15px; font-weight: 700; margin: 20px 0 8px; letter-spacing: 0.04em; }
+        .terms-modal p { font-size: 16px; color: #444; line-height: 1.75; margin-bottom: 12px; }
         .terms-close { position: absolute; top: 20px; right: 24px; font-size: 18px; cursor: pointer; color: #666; transition: color 0.15s, transform 0.2s; }
         .terms-close:hover { color: #111; transform: rotate(90deg); }
     </style>
@@ -343,67 +375,70 @@
     </div>
 </div>
  
-<div class="hero">
-    <div class="hero-tag" style="display:flex;align-items:center;gap:16px;opacity:0;animation:fadeUp 0.5s ease forwards;">
-        <span>AI-Powered &middot; India &middot; Multi-Source</span>
-        <span id="liveIndicator" style="display:flex;align-items:center;gap:6px;background:#f0f0f0;padding:4px 12px;font-size:10px;letter-spacing:0.08em;">
-            <span id="liveDot" style="width:7px;height:7px;background:#ccc;border-radius:50%;display:inline-block;transition:background 0.3s;"></span>
-            <span id="liveText">checking...</span>
-        </span>
+<div class="hero-row">
+    <div class="hero-copy">
+        <div class="hero-tag" style="display:flex;align-items:center;gap:16px;opacity:0;animation:fadeUp 0.5s ease forwards;">
+            <span>AI-Powered &middot; India &middot; Multi-Source</span>
+            <span id="liveIndicator" style="display:flex;align-items:center;gap:6px;background:#f0f0f0;padding:6px 14px;font-size:12px;letter-spacing:0.08em;">
+                <span id="liveDot" style="width:8px;height:8px;background:#ccc;border-radius:50%;display:inline-block;transition:background 0.3s;"></span>
+                <span id="liveText">checking...</span>
+            </span>
+        </div>
+        <div id="nextUpdateBar" style="font-size:13px;color:#888;margin-top:10px;letter-spacing:0.04em;display:none;">
+            Next news at <strong id="nextUpdateTime"></strong>
+        </div>
+        <h1>news <br>of people</h1>
+        <p>Every four hours we pull RSS headlines, group related stories, and write short neutral blurbs with sources you can open yourself. The homepage shows the newest bundles from the last few hours; older days live in the archive.</p>
+        <div class="hero-actions">
+            <a href="#news" class="btn-primary" onclick="document.getElementById('news').scrollIntoView({behavior:'smooth'});return false;">Read latest news</a>
+            <a href="chat.html" class="btn-secondary">Join the Chat</a>
+        </div>
     </div>
-    <div id="nextUpdateBar" style="font-size:11px;color:#888;margin-top:10px;letter-spacing:0.04em;display:none;">
-        Next update at <strong id="nextUpdateTime"></strong>
-    </div>
-    <h1>News without<br>the noise.</h1>
-    <p>Six sources. One summary. Every four hours, NewsLens pulls RSS headlines, groups related stories, and writes short neutral blurbs — with sources you can open yourself.</p>
-    <div class="hero-actions">
-        <a href="#news" class="btn-primary" onclick="document.getElementById('news').scrollIntoView({behavior:'smooth'});return false;">Read Today's News</a>
-        <a href="chat.html" class="btn-secondary">Join the Chat</a>
-    </div>
+    
 </div>
  
 <div class="divider"></div>
  
 <div class="features">
     <div class="feature">
-        <div class="feature-num">01</div>
+        <div class="feature-num">A</div>
         <h3>Multi-source summaries</h3>
         <p>Same story, six angles. See where sources agree and where they don't.</p>
     </div>
     <div class="feature">
-        <div class="feature-num">02</div>
+        <div class="feature-num">B</div>
         <h3>Your prompt, your style</h3>
         <p>Rewrite any summary in your own tone. Funny, formal, simple — your call.</p>
     </div>
     <div class="feature">
-        <div class="feature-num">03</div>
+        <div class="feature-num">C</div>
         <h3>Community discussion</h3>
         <p>One global room. Talk about what's happening with anonymous readers.</p>
     </div>
 </div>
  
 <div class="how">
-    <span class="how-label">How it works</span>
+    <span class="how-label">works? how</span>
     <div class="how-list">
-        <div class="how-item">NewsLens collects articles from six major Indian and international outlets every four hours.</div>
-        <div class="how-item">Articles on the same topic are grouped automatically; each bundle is tagged with a rough category for variety on the homepage.</div>
-        <div class="how-item">An AI compares what the sources actually report (not just matching words) and writes a short plain-language summary.</div>
-        <div class="how-item">Every four hours the feed is re-ranked for importance; source links stay tied to that summary only.</div>
+        <div class="how-item">articles collect from sources every four hours</div>
+        <div class="how-item">articles on the same topic are grouped automatically</div>
+        <div class="how-item">ai writes a short summary based on the articles</div>
+        <div class="how-item">the homepage shows the newsest news from the last few hours</div>
     </div>
 </div>
  
 <div class="search-section">
     <div class="section-label">Search</div>
     <div class="search-row">
-        <input type="text" id="searchInput" placeholder="Search any topic... rupee, IPL, election" />
+        <input type="text" id="searchInput" placeholder="search specific news topics that you want..." />
         <button onclick="searchNews()">Search</button>
     </div>
 </div>
  
 <div class="news-section" id="news">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:36px;">
-        <div class="section-label" style="margin-bottom:0;" id="sectionLabel">Trending Today</div>
-        <span id="lastUpdatedLabel" style="font-size:11px;color:#888;letter-spacing:0.04em;"></span>
+        <div class="section-label" style="margin-bottom:0;" id="sectionLabel">Latest news</div>
+        <span id="lastUpdatedLabel" style="font-size:13px;color:#888;letter-spacing:0.04em;"></span>
     </div>
     <div id="cardsGrid" class="cards-grid">
         <div class="loading">Loading <div class="loading-dots"><span></span><span></span><span></span></div></div>
@@ -411,7 +446,9 @@
 </div>
  
 <div class="archive-section" id="archive">
-    <div class="section-label">Archive</div>
+    <p style="font-size:15px;color:#0f0f0f;">ARCHIVE</p>"
+    
+    <p style="font-size:15px;color:#0f0f0f;margin-bottom:20px;max-width:520px;line-height:1.65;">Browse summaries by calendar day. Stories older than the current “latest” window stay here for history.</p>
     <div class="archive-row">
         <input type="date" id="archiveDate" />
         <button onclick="loadArchive()">View</button>
@@ -422,12 +459,12 @@
 <footer class="footer">
     <div class="footer-col">
         <h4>NewsLens</h4>
-        <p>AI-powered balanced news summaries from multiple Indian and international sources.</p>
-        <p>Auto-updates every 4 hours.</p>
+        <p>AI-powered balanced news summaries from multiple Indian and international sources</p>
+        <p>Auto-updates every 4 hours</p>
     </div>
     <div class="footer-col">
         <h4>Links</h4>
-        <a href="#news" onclick="document.getElementById('news').scrollIntoView({behavior:'smooth'});return false;">Today's News</a>
+        <a href="#news" onclick="document.getElementById('news').scrollIntoView({behavior:'smooth'});return false;">Latest news</a>
         <a href="#archive" onclick="document.getElementById('archive').scrollIntoView({behavior:'smooth'});return false;">Archive</a>
         <a href="chat.html">Community Chat</a>
         <a href="contact.html">Contact Us</a>
@@ -479,7 +516,11 @@
 </div>
  
 <script>
-    const API = localStorage.getItem('API_BASE') || '';
+    function apiUrl(path) {
+        const base = (localStorage.getItem('API_BASE') || '').trim().replace(/\/$/, '');
+        if (!path.startsWith('/')) path = '/' + path;
+        return base ? base + path : path;
+    }
  
     window.addEventListener('scroll', () => {
         const scrollTop = window.scrollY;
@@ -512,11 +553,11 @@
     const TERMS_CONTENT = {
         terms: {
             title: 'Terms of Use',
-            body: `<p><em>Last updated: April 2026</em></p><h3>1. Agreement</h3><p>By using NewsLens (the site, APIs, chat, and related pages), you agree to these Terms. If you do not agree, do not use the service.</p><h3>2. What NewsLens is</h3><p>NewsLens aggregates publicly available headlines and descriptions from third-party RSS feeds, groups related items, and uses an external AI provider to generate short summaries and rankings. We are not a news organisation, editor, or broadcaster. Headlines and summaries are automated and informational only.</p><h3>3. Accuracy and reliance</h3><p>Summaries may be incomplete, outdated, or wrong. Stories are ranked automatically and can miss context. Always read the original articles via the provided links before forming conclusions or taking action.</p><h3>4. Third-party content</h3><p>All article text, trademarks, and opinions belong to their respective publishers. Links are provided for reference; we do not control third-party sites or their terms.</p><h3>5. Community chat</h3><p>Chat messages are largely anonymous. You are solely responsible for what you post. No harassment, illegal content, spam, personal data of others, or attempts to compromise the service. We may delete messages or restrict access without notice.</p><h3>6. Custom prompts</h3><p>Regenerated summaries use AI under your short instruction, subject to daily limits. You must not use this to produce unlawful, abusive, or misleading content. We may refuse or throttle usage.</p><h3>7. Admin tools</h3><p>Server operators may use password-protected admin features (export, purge, manual pipeline runs). Those actions affect stored data on that deployment only.</p><h3>8. Acceptable use</h3><p>Do not scrape or overload the service, probe for vulnerabilities, or use NewsLens in violation of applicable law.</p><h3>9. Disclaimer of warranties</h3><p>The service is provided “as is” without warranties of any kind, including merchantability, fitness for a purpose, or non-infringement.</p><h3>10. Limitation of liability</h3><p>To the fullest extent permitted by law, NewsLens and its operators are not liable for indirect, incidental, or consequential damages, or for losses arising from reliance on summaries or third-party content.</p><h3>11. Changes</h3><p>We may update these Terms by posting a revised version on the site. Continued use after changes means you accept the update.</p><h3>12. Contact</h3><p>For questions, use the Contact page linked in the site footer.</p>`
+            body: `<p><em>Last updated: April 2026</em></p><h3>1. Agreement</h3><p>By using NewsLens (the site, APIs, chat, and related pages), you agree to these Terms. If you do not agree, do not use the service.</p><h3>2. What NewsLens is</h3><p>NewsLens aggregates publicly available headlines and descriptions from third-party RSS feeds, groups related items, and uses an external AI provider to generate short summaries. We are not a news organisation, editor, or broadcaster. Headlines and summaries are automated and informational only.</p><h3>3. Accuracy and reliance</h3><p>Summaries may be incomplete, outdated, or wrong. The homepage shows the newest bundles first; context can still be missing. Always read the original articles via the provided links before forming conclusions or taking action.</p><h3>4. Third-party content</h3><p>All article text, trademarks, and opinions belong to their respective publishers. Links are provided for reference; we do not control third-party sites or their terms.</p><h3>5. Community chat</h3><p>Chat messages are largely anonymous. You are solely responsible for what you post. No harassment, illegal content, spam, personal data of others, or attempts to compromise the service. We may delete messages or restrict access without notice.</p><h3>6. Custom prompts</h3><p>Regenerated summaries use AI under your short instruction, subject to daily limits. You must not use this to produce unlawful, abusive, or misleading content. We may refuse or throttle usage.</p><h3>7. Admin tools</h3><p>Server operators may use password-protected admin features (export, purge, manual pipeline runs). Those actions affect stored data on that deployment only.</p><h3>8. Acceptable use</h3><p>Do not scrape or overload the service, probe for vulnerabilities, or use NewsLens in violation of applicable law.</p><h3>9. Disclaimer of warranties</h3><p>The service is provided “as is” without warranties of any kind, including merchantability, fitness for a purpose, or non-infringement.</p><h3>10. Limitation of liability</h3><p>To the fullest extent permitted by law, NewsLens and its operators are not liable for indirect, incidental, or consequential damages, or for losses arising from reliance on summaries or third-party content.</p><h3>11. Changes</h3><p>We may update these Terms by posting a revised version on the site. Continued use after changes means you accept the update.</p><h3>12. Contact</h3><p>For questions, use the Contact page linked in the site footer.</p>`
         },
         privacy: {
             title: 'Privacy Policy',
-            body: `<p><em>Last updated: April 2026</em></p><h3>1. Overview</h3><p>This policy describes how NewsLens handles information in connection with the public site, APIs, chat, optional admin sign-in, and AI-powered summarisation.</p><h3>2. What we process</h3><p><strong>RSS and summaries:</strong> We fetch publicly available feed entries and store derived summaries, source lists, and URLs needed to show the product.</p><p><strong>Chat:</strong> Messages you send are stored so the shared chat works. They are not tied to a named account.</p><p><strong>Custom prompt feature:</strong> We store a daily usage flag per approximate client identifier so the free limit can be enforced.</p><p><strong>Optional admin session:</strong> If enabled, a signed session cookie may be set after you enter a server secret so admin pages can call protected APIs. It is not used for normal reading.</p><p><strong>Browser storage:</strong> The frontend may store an optional API base URL in <code>localStorage</code> for development; we do not require accounts.</p><h3>3. AI providers</h3><p>Summaries, rankings, and optional custom rewrites are generated using third-party AI APIs (e.g. Groq). Prompts include article text or existing summaries from our database. Do not paste sensitive personal data into the chat or custom prompt fields.</p><h3>4. Logs and security</h3><p>Server operators may keep standard technical logs (e.g. IP, timestamps, errors) for security and debugging. Retention depends on hosting configuration.</p><h3>5. Cookies and similar technologies</h3><p>We do not use advertising or analytics cookies on the public reader experience. A session cookie may be used only for admin login where configured.</p><h3>6. Retention and deletion</h3><p>Operators can purge stored articles, summaries, and chat via admin tools. There is no guarantee of indefinite retention.</p><h3>7. Children</h3><p>NewsLens is not directed at children under 13, and we do not knowingly collect personal information from them.</p><h3>8. International users</h3><p>Data may be processed wherever the server and AI providers are located. By using the service you understand your information may cross borders.</p><h3>9. Your choices</h3><p>Avoid submitting personal data in chat or prompts. You can clear <code>localStorage</code> in your browser. Admin users can log out to clear the session cookie.</p><h3>10. Changes</h3><p>We may update this policy from time to time. The “Last updated” date will change when we do.</p><h3>11. Contact</h3><p>Questions about privacy can be sent via the Contact page.</p>`
+            body: `<p><em>Last updated: April 2026</em></p><h3>1. Overview</h3><p>This policy describes how NewsLens handles information in connection with the public site, APIs, chat, optional admin sign-in, and AI-powered summarisation.</p><h3>2. What we process</h3><p><strong>RSS and summaries:</strong> We fetch publicly available feed entries and store derived summaries, source lists, and URLs needed to show the product. The reader lists the newest bundles first; older material is available in the archive.</p><p><strong>Chat:</strong> Messages you send are stored so the shared chat works. They are not tied to a named account.</p><p><strong>Custom prompt feature:</strong> We store a daily usage flag per approximate client identifier so the free limit can be enforced.</p><p><strong>Optional admin session:</strong> If enabled, a signed session cookie may be set after you enter a server secret so admin pages can call protected APIs. It is not used for normal reading.</p><p><strong>Browser storage:</strong> The frontend may store an optional API base URL in <code>localStorage</code> for development; we do not require accounts.</p><h3>3. AI providers</h3><p>Summaries and optional custom rewrites are generated using third-party AI APIs (e.g. Groq). Prompts include article text or existing summaries from our database. Do not paste sensitive personal data into the chat or custom prompt fields.</p><h3>4. Logs and security</h3><p>Server operators may keep standard technical logs (e.g. IP, timestamps, errors) for security and debugging. Retention depends on hosting configuration.</p><h3>5. Cookies and similar technologies</h3><p>We do not use advertising or analytics cookies on the public reader experience. A session cookie may be used only for admin login where configured.</p><h3>6. Retention and deletion</h3><p>Operators can purge stored articles, summaries, and chat via admin tools. There is no guarantee of indefinite retention.</p><h3>7. Children</h3><p>NewsLens is not directed at children under 13, and we do not knowingly collect personal information from them.</p><h3>8. International users</h3><p>Data may be processed wherever the server and AI providers are located. By using the service you understand your information may cross borders.</p><h3>9. Your choices</h3><p>Avoid submitting personal data in chat or prompts. You can clear <code>localStorage</code> in your browser. Admin users can log out to clear the session cookie.</p><h3>10. Changes</h3><p>We may update this policy from time to time. The “Last updated” date will change when we do.</p><h3>11. Contact</h3><p>Questions about privacy can be sent via the Contact page.</p>`
         }
     };
  
@@ -528,26 +569,47 @@
     function closeTerms(e) { if (e.target === document.getElementById('termsOverlay')) closeTermsDirect(); }
     function closeTermsDirect() { document.getElementById('termsOverlay').classList.remove('active'); }
  
+    function formatArticleTime(published, fetched) {
+        const raw = published || fetched || '';
+        let d = Date.parse(raw);
+        if (Number.isNaN(d) && fetched) {
+            d = Date.parse(String(fetched).replace(/^(\d{4}-\d{2}-\d{2}) /, '$1T'));
+        }
+        if (!Number.isNaN(d)) {
+            return new Date(d).toLocaleString('en-IN', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' });
+        }
+        return (fetched || '').replace('T', ' ').slice(0, 16) || '—';
+    }
+
     async function loadTrending() {
         try {
-            const res = await fetch(`${API}/api/trending`);
+            const res = await fetch(apiUrl('/api/trending'));
+            if (!res.ok) {
+                document.getElementById('cardsGrid').innerHTML = '<div class="no-results">Could not load news (HTTP ' + res.status + '). Deploy the latest API, or set <code>API_BASE</code> in localStorage if the reader and API use different hosts.</div>';
+                return;
+            }
             const data = await res.json();
+            if (!Array.isArray(data)) {
+                document.getElementById('cardsGrid').innerHTML = '<div class="no-results">Unexpected response from the server.</div>';
+                return;
+            }
             renderCards(data, 'cardsGrid');
             if (data.length > 0) {
                 const latest = new Date(data[0].created_at);
                 document.getElementById('lastUpdatedLabel').textContent = 'Last updated ' + latest.toLocaleTimeString('en-IN', {hour:'2-digit', minute:'2-digit'});
+            } else {
+                document.getElementById('lastUpdatedLabel').textContent = '';
             }
             setTimeout(() => animateCards('cardsGrid'), 100);
-            // Keep ticker in sync with newest summaries
             loadTicker();
         } catch(e) {
-            document.getElementById('cardsGrid').innerHTML = '<div class="no-results">Could not load news. Make sure the server is running.</div>';
+            document.getElementById('cardsGrid').innerHTML = '<div class="no-results">Could not load news. Check network, API URL, and that the server is running.</div>';
         }
     }
 
     async function loadTicker() {
         try {
-            const res = await fetch(`${API}/api/titles`);
+            const res = await fetch(apiUrl('/api/titles'));
             const data = await res.json();
             if (!data || !data.length) return;
             const titles = data.map(x => (x.headline || x.topic)).filter(Boolean).slice(0, 10);
@@ -564,13 +626,13 @@
     async function searchNews() {
         const query = document.getElementById('searchInput').value.trim();
         if (!query) {
-            document.getElementById('sectionLabel').textContent = 'Trending Today';
+            document.getElementById('sectionLabel').textContent = 'Latest news';
             loadTrending();
             return;
         }
         document.getElementById('sectionLabel').textContent = `Results for "${query}"`;
         document.getElementById('cardsGrid').innerHTML = '<div class="loading">Searching <div class="loading-dots"><span></span><span></span><span></span></div></div>';
-        const res = await fetch(`${API}/api/search?q=${encodeURIComponent(query)}`);
+        const res = await fetch(apiUrl('/api/search?q=' + encodeURIComponent(query)));
         const data = await res.json();
         if (data.length === 0) {
             document.getElementById('cardsGrid').innerHTML = '<div class="no-results">No results found.</div>';
@@ -584,7 +646,7 @@
         const date = document.getElementById('archiveDate').value;
         if (!date) return;
         document.getElementById('archiveResults').innerHTML = '<div class="loading">Loading <div class="loading-dots"><span></span><span></span><span></span></div></div>';
-        const res = await fetch(`${API}/api/archive?date=${date}`);
+        const res = await fetch(apiUrl('/api/archive?date=' + encodeURIComponent(date)));
         const data = await res.json();
         if (data.length === 0) {
             document.getElementById('archiveResults').innerHTML = '<div class="no-results">No summaries found for that date.</div>';
@@ -637,7 +699,7 @@
  
     async function openModal(id) {
         const overlay = document.getElementById('modalOverlay');
-        const res = await fetch(`${API}/api/summary/${id}`);
+        const res = await fetch(apiUrl('/api/summary/' + id));
         const item = await res.json();
         document.getElementById('modal').dataset.summaryId = id;
         document.getElementById('modalTopic').textContent = item.headline || item.topic;
@@ -694,7 +756,7 @@
         const summaryId = document.getElementById('modal').dataset.summaryId;
         if (!summaryId) return;
         document.getElementById('modalSummary').innerHTML = 'Generating <span style="display:inline-flex;gap:4px;margin-left:4px;vertical-align:middle;"><span style="width:5px;height:5px;background:#ccc;border-radius:50%;display:inline-block;animation:dotPulse 1.2s infinite;"></span><span style="width:5px;height:5px;background:#ccc;border-radius:50%;display:inline-block;animation:dotPulse 1.2s infinite 0.2s;"></span><span style="width:5px;height:5px;background:#ccc;border-radius:50%;display:inline-block;animation:dotPulse 1.2s infinite 0.4s;"></span></span>';
-        const res = await fetch(`${API}/api/summarize/custom`, {
+        const res = await fetch(apiUrl('/api/summarize/custom'), {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ summary_id: parseInt(summaryId), instruction })
@@ -709,7 +771,7 @@
  
     async function checkStatus() {
         try {
-            const res = await fetch(`${API}/api/status`);
+            const res = await fetch(apiUrl('/api/status'));
             const data = await res.json();
             const dot = document.getElementById('liveDot');
             const text = document.getElementById('liveText');
@@ -725,9 +787,10 @@
     checkStatus();
     loadTicker();
     loadTrending();
-    // Refresh headline tape and trending cards periodically
+    loadRecentArticles();
     setInterval(loadTicker, 5 * 60 * 1000);
     setInterval(loadTrending, 5 * 60 * 1000);
+    setInterval(loadRecentArticles, 5 * 60 * 1000);
     // Keep “next update” in sync with fixed 4-hour slots (server clock)
     setInterval(checkStatus, 60 * 1000);
 </script>

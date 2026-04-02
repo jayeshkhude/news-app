@@ -10,7 +10,6 @@ sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 from backend.database import get_connection
 from backend.clusterer import cluster_articles
 from backend.prompts import get_cluster_json_prompt
-from backend.ranker import rank_summaries_for_date
 
 MODEL = "llama-3.1-8b-instant"
 
@@ -203,8 +202,6 @@ def run_summarizer(custom_instruction=None):
     conn.commit()
     conn.close()
     print(f"\nSummaries done ({inserted} new row(s))")
-    rank_summaries_for_date(today)
-    print("Ranking pass complete")
 
 
 if __name__ == "__main__":

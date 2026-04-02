@@ -6,7 +6,7 @@
     <title>NewsLens — Community Chat</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: 'Courier New', monospace; background: #fff; color: #111; display: flex; flex-direction: column; height: 100vh; }
+        body { font-family: 'Courier New', monospace; background: #fff; color: #111; display: flex; flex-direction: column; height: 100vh; font-size: 17px; line-height: 1.55; }
 
         #progressBar {
             position: fixed; top: 0; left: 0;
@@ -26,7 +26,7 @@
             transition: padding 0.3s ease;
         }
         .nav.scrolled { padding: 16px 48px; }
-        .nav-logo { font-size: 15px; letter-spacing: 0.08em; font-weight: 700; }
+        .nav-logo { font-size: 16px; letter-spacing: 0.08em; font-weight: 700; }
         .nav-logo a {
             text-decoration: none; color: #111;
             display: flex; align-items: center; gap: 12px;
@@ -39,7 +39,7 @@
         }
         .nav-logo a:hover .logo-mark { transform: rotate(6deg); }
         .nav-right {
-            font-size: 12px; color: #666; letter-spacing: 0.04em;
+            font-size: 14px; color: #666; letter-spacing: 0.04em;
             text-decoration: none; position: relative;
             transition: color 0.2s;
         }
@@ -57,11 +57,11 @@
             opacity: 0; animation: fadeUp 0.5s ease forwards 0.1s;
         }
         @keyframes fadeUp { to { opacity: 1; transform: translateY(0); } }
-        .chat-info h2 { font-size: 13px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; margin-bottom: 8px; }
-        .chat-info p { font-size: 12px; color: #555; line-height: 1.7; }
+        .chat-info h2 { font-size: 14px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; margin-bottom: 8px; }
+        .chat-info p { font-size: 15px; color: #555; line-height: 1.7; }
         .chat-rules { display: flex; gap: 24px; margin-top: 12px; flex-wrap: wrap; }
         .rule {
-            font-size: 11px; color: #888; letter-spacing: 0.04em;
+            font-size: 13px; color: #888; letter-spacing: 0.04em;
             border-left: 1px solid #ccc; padding-left: 12px;
             transition: border-color 0.2s, color 0.2s;
         }
@@ -79,15 +79,15 @@
             opacity: 0; transform: translateY(8px);
             animation: fadeUp 0.3s ease forwards;
         }
-        .message .name { font-size: 11px; color: #888; letter-spacing: 0.06em; text-transform: uppercase; }
+        .message .name { font-size: 12px; color: #888; letter-spacing: 0.06em; text-transform: uppercase; }
         .message .text {
-            font-size: 14px; color: #111; line-height: 1.7;
+            font-size: 16px; color: #111; line-height: 1.7;
             background: #f7f7f7; padding: 12px 16px;
             border: 0.5px solid #e8e8e8;
             transition: border-color 0.15s, background 0.15s;
         }
         .message:hover .text { border-color: #ccc; background: #f3f3f3; }
-        .message .time { font-size: 11px; color: #bbb; }
+        .message .time { font-size: 13px; color: #bbb; }
 
         .input-area {
             border-top: 0.5px solid #ccc;
@@ -101,32 +101,32 @@
         }
         .input-row:focus-within { border-color: #111; box-shadow: 3px 3px 0 #111; }
         .input-row input {
-            flex: 1; padding: 14px 20px; border: none; outline: none;
-            font-family: 'Courier New', monospace; font-size: 14px; color: #111; background: #fff;
+            flex: 1; padding: 16px 20px; border: none; outline: none;
+            font-family: 'Courier New', monospace; font-size: 16px; color: #111; background: #fff;
         }
         .char-display {
-            padding: 14px 16px; font-size: 11px; color: #999;
+            padding: 16px 16px; font-size: 13px; color: #999;
             align-self: center; white-space: nowrap;
             border-left: 0.5px solid #e8e8e8;
             transition: color 0.2s;
         }
         .char-display.near-limit { color: #c00; }
         .send-btn {
-            padding: 14px 28px; background: #111; color: #fff;
+            padding: 16px 28px; background: #111; color: #fff;
             border: none; cursor: pointer;
-            font-family: 'Courier New', monospace; font-size: 13px; letter-spacing: 0.06em;
+            font-family: 'Courier New', monospace; font-size: 15px; letter-spacing: 0.06em;
             transition: background 0.2s, transform 0.15s;
         }
         .send-btn:hover { background: #333; }
         .send-btn:active { transform: scale(0.98); }
 
         .error-msg {
-            font-size: 12px; color: #c00; padding: 8px 0;
+            font-size: 14px; color: #c00; padding: 8px 0;
             max-width: 700px; letter-spacing: 0.02em; display: none;
             animation: fadeUp 0.3s ease;
         }
 
-        .empty-msg { font-size: 13px; color: #999; padding: 16px 0; }
+        .empty-msg { font-size: 15px; color: #999; padding: 16px 0; }
 
         .loading-dots { display: flex; gap: 4px; align-items: center; padding: 16px 0; }
         .loading-dots span {

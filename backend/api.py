@@ -158,30 +158,57 @@ def _summary_public_dict(row):
     }
 
 
-def _diversify_by_category(rows, limit):
-    """Prefer at most one story per category, then fill by score order."""
-    out = []
-    seen_ids = set()
-    seen_cat = set()
+# Homepage "latest news": newest summaries from the current ~4h window; otherwise fill up to 20 by recency.
+LATEST_NEWS_WINDOW_HOURS = 4
+LATEST_NEWS_MIN = 10
+LATEST_NEWS_MAX = 20
+_LATEST_NEWS_FETCH_CAP = 120
+
+
+def _parse_created_at_ist(value):
+    """Parse DB created_at into an aware datetime in IST (naive strings are treated as IST)."""
+    if value is None:
+        return None
+    raw = str(value).strip()
+    if not raw:
+        return None
+    try:
+        raw_iso = raw.replace(" ", "T", 1)
+        if raw_iso.endswith("Z"):
+            dt = datetime.fromisoformat(raw_iso.replace("Z", "+00:00"))
+        else:
+            dt = datetime.fromisoformat(raw_iso)
+        if dt.tzinfo is None:
+            dt = dt.replace(tzinfo=IST)
+        return dt.astimezone(IST)
+    except ValueError:
+        return None
+
+
+def _rows_for_latest_news():
+    conn = get_connection()
+    cursor = conn.cursor()
+    cursor.execute(
+        """
+        SELECT id, topic, headline, summary, sources, article_links, created_at, category,
+               importance_score, summary_date
+        FROM summaries
+        ORDER BY id DESC
+        LIMIT ?
+        """,
+        (_LATEST_NEWS_FETCH_CAP,),
+    )
+    rows = cursor.fetchall()
+    conn.close()
+    cutoff = datetime.now(IST) - timedelta(hours=LATEST_NEWS_WINDOW_HOURS)
+    in_window = []
     for row in rows:
-        rid = row["id"]
-        c = _row_text(row["category"] if "category" in row.keys() else "").lower() or "other"
-        if c in seen_cat:
-            continue
-        seen_cat.add(c)
-        out.append(row)
-        seen_ids.add(rid)
-        if len(out) >= limit:
-            return out
-    for row in rows:
-        rid = row["id"]
-        if rid in seen_ids:
-            continue
-        out.append(row)
-        seen_ids.add(rid)
-        if len(out) >= limit:
-            break
-    return out
+        dt = _parse_created_at_ist(row["created_at"])
+        if dt is not None and dt >= cutoff:
+            in_window.append(row)
+    if len(in_window) >= LATEST_NEWS_MIN:
+        return in_window[:LATEST_NEWS_MAX]
+    return list(rows[:LATEST_NEWS_MAX])
 
 
 def _public_links_from_row(row):
@@ -247,10 +274,13 @@ def _api_cache_headers(resp):
         return resp
     reader_paths = {
         "/api/trending",
+        "/api/latest-news",
         "/api/titles",
         "/api/status",
         "/api/search",
         "/api/archive",
+        "/api/articles/recent",
+        "/api/articles",
     }
     if request.path in reader_paths or request.path.startswith("/api/summary/"):
         resp.headers["Cache-Control"] = "no-store, max-age=0, must-revalidate"
@@ -263,24 +293,38 @@ def index():
 
 @app.route('/api/trending', methods=['GET'])
 def get_trending():
+    rows = _rows_for_latest_news()
+    return jsonify([_summary_public_dict(r) for r in rows])
+
+
+@app.route('/api/latest-news', methods=['GET'])
+def get_latest_news():
+    return get_trending()
+
+
+@app.route('/api/articles/recent', methods=['GET'])
+@app.route('/api/articles', methods=['GET'])
+def articles_recent():
+    limit = request.args.get('limit', '25')
+    try:
+        n = max(1, min(50, int(limit)))
+    except ValueError:
+        n = 25
     conn = get_connection()
     cursor = conn.cursor()
     cursor.execute(
         """
-        SELECT id, topic, headline, summary, sources, article_links, created_at, category,
-               importance_score, summary_date
-        FROM summaries
-        ORDER BY (summary_date >= date('now', '-2 day')) DESC,
-                 summary_date DESC,
-                 importance_score DESC,
-                 id DESC
-        LIMIT 40
-        """
+        SELECT id, title, source, link, published, fetched_at
+        FROM articles
+        ORDER BY id DESC
+        LIMIT ?
+        """,
+        (n,),
     )
-    rows = cursor.fetchall()
+    rows = [dict(r) for r in cursor.fetchall()]
     conn.close()
-    picked = _diversify_by_category(rows, 8)
-    return jsonify([_summary_public_dict(r) for r in picked])
+    return jsonify(rows)
+
 
 @app.route('/api/titles', methods=['GET'])
 def get_titles():
@@ -288,20 +332,16 @@ def get_titles():
     cursor = conn.cursor()
     cursor.execute(
         """
-        SELECT id, topic, headline, created_at, category, importance_score, summary_date
+        SELECT id, topic, headline, created_at
         FROM summaries
-        ORDER BY (summary_date >= date('now', '-2 day')) DESC,
-                 summary_date DESC,
-                 importance_score DESC,
-                 id DESC
-        LIMIT 28
+        ORDER BY id DESC
+        LIMIT 30
         """
     )
     rows = cursor.fetchall()
     conn.close()
-    picked = _diversify_by_category(rows, 12)
     out = []
-    for r in picked:
+    for r in rows:
         h = _row_text(r["headline"])
         out.append(
             {
@@ -363,7 +403,7 @@ def get_archive():
                importance_score, summary_date
         FROM summaries
         WHERE summary_date = ?
-        ORDER BY importance_score DESC, id DESC
+        ORDER BY created_at DESC, id DESC
         """,
         (date,),
     )
@@ -661,10 +701,10 @@ def admin_latest():
         ORDER BY id DESC
         LIMIT ?
     ''', (limit_n,))
-    articles = [dict(r) for r in cursor.fetchall()]
+    articles_pulled = [dict(r) for r in cursor.fetchall()]
 
     cursor.execute('''
-        SELECT id, topic, created_at, summary_date
+        SELECT id, topic, headline, category, created_at, summary_date
         FROM summaries
         ORDER BY id DESC
         LIMIT ?
@@ -679,10 +719,15 @@ def admin_latest():
     ''', (limit_n,))
     custom_prompt_uses = [dict(r) for r in cursor.fetchall()]
 
+    latest_rows = _rows_for_latest_news()
+    latest_news = [_summary_public_dict(r) for r in latest_rows]
+
     conn.close()
     return jsonify({
-        'articles': articles,
+        'articles_pulled': articles_pulled,
         'summaries': summaries,
+        'latest_news': latest_news,
+        'articles': articles_pulled,
         'custom_prompt_uses': custom_prompt_uses
     })
 
