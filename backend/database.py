@@ -2,10 +2,27 @@ import sqlite3
 import os
 import hashlib
 
-DB_PATH = os.path.join(os.path.dirname(__file__), '..', 'data', 'news.db')
+_DEFAULT_DB_PATH = os.path.join(os.path.dirname(__file__), "..", "data", "news.db")
+DB_PATH = os.environ.get("SQLITE_DB_PATH", "").strip() or _DEFAULT_DB_PATH
+
+
+def _ensure_db_dir(db_path: str) -> None:
+    folder = os.path.dirname(os.path.abspath(db_path))
+    if not folder:
+        return
+    os.makedirs(folder, exist_ok=True)
 
 def get_connection():
-    conn = sqlite3.connect(DB_PATH, timeout=30.0)
+    # Render/containers may not have the ./data directory created (or writable) by default.
+    # Ensure parent directory exists; if it still fails, fall back to /tmp.
+    db_path = DB_PATH
+    try:
+        _ensure_db_dir(db_path)
+        conn = sqlite3.connect(db_path, timeout=30.0)
+    except sqlite3.OperationalError:
+        db_path = os.path.join("/tmp", "news.db")
+        _ensure_db_dir(db_path)
+        conn = sqlite3.connect(db_path, timeout=30.0)
     conn.row_factory = sqlite3.Row
     try:
         conn.execute("PRAGMA journal_mode=WAL")
