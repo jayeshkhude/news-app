@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NewsLens — Admin sign in</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Courier New', monospace; background: #fff; color: #111; font-size: 17px; min-height: 100vh; display: flex; flex-direction: column; line-height: 1.55; }
+        .nav {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 28px 48px; border-bottom: 0.5px solid #ccc;
+            background: rgba(255,255,255,0.96);
+        }
+        .nav-logo { display: flex; align-items: center; gap: 12px; text-decoration: none; color: #111; }
+        .logo-mark {
+            width: 32px; height: 32px; background: #111;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 14px; color: #fff; font-weight: 700;
+        }
+        .nav-logo-text { font-size: 15px; letter-spacing: 0.08em; font-weight: 700; }
+        .nav-right { color: #333; text-decoration: none; font-size: 14px; }
+        .wrap { flex: 1; padding: 64px 48px; max-width: 480px; }
+        h1 { font-size: 22px; font-weight: 700; margin-bottom: 10px; }
+        p { font-size: 16px; color: #444; line-height: 1.75; margin-bottom: 28px; }
+        label { display: block; font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; color: #666; margin-bottom: 10px; }
+        input[type="password"] {
+            width: 100%; padding: 16px 16px; border: 0.5px solid #888; outline: none;
+            font-family: 'Courier New', monospace; font-size: 16px; margin-bottom: 20px;
+        }
+        input:focus { border-color: #111; }
+        button {
+            width: 100%; padding: 16px; background: #111; color: #fff; border: none; cursor: pointer;
+            font-family: 'Courier New', monospace; font-size: 15px; letter-spacing: 0.06em;
+        }
+        button:hover { background: #333; }
+        button:disabled { opacity: 0.5; cursor: not-allowed; }
+        .err { font-size: 13px; color: #b00020; margin-top: 14px; min-height: 1.2em; }
+    </style>
+</head>
+<body>
+<nav class="nav">
+    <a class="nav-logo" href="index.html">
+        <div class="logo-mark">NL</div>
+        <span class="nav-logo-text">NEWSLENS</span>
+    </a>
+    <a href="index.html" class="nav-right">← Home</a>
+</nav>
+<div class="wrap">
+    <h1>Admin</h1>
+    <p>Enter the admin token from your server environment (<code>ADMIN_TOKEN</code>). You will stay signed in until you log out or close the browser session.</p>
+    <label for="token">Admin token</label>
+    <input type="password" id="token" placeholder="Token" autocomplete="off" />
+    <button type="button" id="btnGo" onclick="doLogin()">Continue to admin panel</button>
+    <div class="err" id="err"></div>
+</div>
+<script>
+    const API = localStorage.getItem('API_BASE') || '';
+    document.getElementById('token').addEventListener('keypress', e => {
+        if (e.key === 'Enter') doLogin();
+    });
+    async function doLogin() {
+        const token = document.getElementById('token').value.trim();
+        const err = document.getElementById('err');
+        const btn = document.getElementById('btnGo');
+        err.textContent = '';
+        if (!token) { err.textContent = 'Enter the token.'; return; }
+        btn.disabled = true;
+        try {
+            const res = await fetch(`${API}/api/admin/login`, {
+                method: 'POST',
+                credentials: 'same-origin',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ token })
+            });
+            const data = await res.json().catch(() => ({}));
+            if (!res.ok) {
+                err.textContent = data.error || 'Sign-in failed.';
+                btn.disabled = false;
+                return;
+            }
+            window.location.href = 'admin.html';
+        } catch (e) {
+            err.textContent = 'Could not reach server.';
+            btn.disabled = false;
+        }
+    }
+</script>
+</body>
+</html>

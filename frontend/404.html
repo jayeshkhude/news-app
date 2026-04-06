@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>404 — NewsLens</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Courier New', monospace; background: #fff; color: #111; min-height: 100vh; display: flex; flex-direction: column; font-size: 17px; line-height: 1.55; }
+ 
+        .nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 28px 48px;
+            border-bottom: 0.5px solid #ccc;
+        }
+        .nav-logo { display: flex; align-items: center; gap: 12px; text-decoration: none; }
+        .logo-mark {
+            width: 32px; height: 32px;
+            background: #111;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 14px; color: #fff; font-weight: 700; letter-spacing: -1px;
+        }
+        .nav-logo-text { font-size: 16px; letter-spacing: 0.08em; font-weight: 700; color: #111; }
+ 
+        .breaking-bar {
+            width: 100%;
+            background: #111;
+            color: #fff;
+            padding: 10px 20px;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            overflow: hidden;
+        }
+        .breaking-label {
+            font-size: 10px;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+            background: red;
+            color: #fff;
+            padding: 3px 8px;
+            white-space: nowrap;
+            font-weight: 700;
+            animation: blink 1s infinite;
+        }
+        @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.3} }
+        .breaking-text {
+            font-size: 12px;
+            letter-spacing: 0.04em;
+            white-space: nowrap;
+            animation: scroll-left 22s linear infinite;
+        }
+        @keyframes scroll-left {
+            0% { transform: translateX(100vw); }
+            100% { transform: translateX(-200%); }
+        }
+ 
+        .main {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 40px 48px;
+            text-align: center;
+        }
+ 
+        .error-code {
+            font-size: 110px;
+            font-weight: 700;
+            letter-spacing: -0.04em;
+            color: #111;
+            line-height: 1;
+            margin-bottom: 8px;
+            animation: shake 4s ease-in-out infinite;
+        }
+        @keyframes shake {
+            0%,90%,100% { transform: translateX(0); }
+            92% { transform: translateX(-4px); }
+            94% { transform: translateX(4px); }
+            96% { transform: translateX(-3px); }
+            98% { transform: translateX(3px); }
+        }
+ 
+        .headline {
+            font-size: 22px;
+            font-weight: 400;
+            margin-bottom: 40px;
+            line-height: 1.35;
+            max-width: 520px;
+        }
+ 
+        .reporter-section {
+            width: 100%;
+            max-width: 700px;
+            border: 0.5px solid #ccc;
+            margin-bottom: 32px;
+            overflow: hidden;
+        }
+        .reporter-header {
+            background: #111;
+            color: #fff;
+            padding: 10px 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .reporter-header-left { display: flex; align-items: center; gap: 12px; }
+        .live-dot {
+            width: 8px; height: 8px;
+            background: red;
+            border-radius: 50%;
+            animation: blink 0.8s infinite;
+        }
+        .reporter-header span { font-size: 11px; letter-spacing: 0.08em; }
+        .reporter-location { font-size: 10px; color: #aaa; letter-spacing: 0.06em; }
+ 
+        .reporter-body {
+            display: flex;
+            align-items: flex-start;
+            gap: 20px;
+            padding: 24px;
+            background: #fafafa;
+            text-align: left;
+        }
+ 
+        .reporter-avatar-wrap { flex-shrink: 0; display: flex; flex-direction: column; align-items: center; gap: 8px; }
+        .reporter-avatar {
+            width: 64px;
+            height: 64px;
+            background: #111;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 28px;
+            position: relative;
+        }
+        .reporter-avatar::after {
+            content: '🎤';
+            position: absolute;
+            bottom: -4px;
+            right: -4px;
+            font-size: 16px;
+        }
+        .speaking-bars {
+            display: flex;
+            gap: 3px;
+            align-items: flex-end;
+            height: 20px;
+        }
+        .bar {
+            width: 4px;
+            background: #111;
+            border-radius: 2px;
+            animation: sound 0.6s ease-in-out infinite alternate;
+        }
+        .bar:nth-child(1) { animation-delay: 0s; }
+        .bar:nth-child(2) { animation-delay: 0.15s; }
+        .bar:nth-child(3) { animation-delay: 0.3s; }
+        .bar:nth-child(4) { animation-delay: 0.1s; }
+        .bar:nth-child(5) { animation-delay: 0.25s; }
+        @keyframes sound {
+            0% { height: 4px; }
+            100% { height: 18px; }
+        }
+ 
+        .reporter-dialogue { flex: 1; }
+        .reporter-name { font-size: 10px; letter-spacing: 0.1em; color: #999; text-transform: uppercase; margin-bottom: 8px; }
+        .reporter-text { font-size: 16px; line-height: 1.7; color: #111; min-height: 80px; }
+        .cursor {
+            display: inline-block;
+            width: 2px; height: 14px;
+            background: #111;
+            margin-left: 2px;
+            vertical-align: middle;
+            animation: blink 0.7s infinite;
+        }
+ 
+        .reporter-footer {
+            padding: 12px 24px;
+            border-top: 0.5px solid #eee;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .reporter-footer span { font-size: 11px; color: #999; letter-spacing: 0.04em; }
+        .next-btn {
+            font-family: 'Courier New', monospace;
+            font-size: 11px;
+            letter-spacing: 0.06em;
+            background: transparent;
+            border: 0.5px solid #bbb;
+            padding: 6px 16px;
+            cursor: pointer;
+            color: #333;
+        }
+        .next-btn:hover { border-color: #111; color: #111; }
+ 
+        .fake-article {
+            width: 100%;
+            max-width: 700px;
+            border: 0.5px solid #ccc;
+            padding: 24px;
+            margin-bottom: 32px;
+            text-align: left;
+        }
+        .fake-article-label { font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: #999; margin-bottom: 12px; }
+        .fake-lines { display: flex; flex-direction: column; gap: 8px; }
+        .fake-line { height: 10px; background: #f0f0f0; border-radius: 2px; animation: pulse 1.8s ease-in-out infinite; }
+        .fake-line:nth-child(2) { animation-delay: 0.2s; width: 85%; }
+        .fake-line:nth-child(3) { animation-delay: 0.4s; width: 92%; }
+        .fake-line:nth-child(4) { animation-delay: 0.6s; width: 60%; }
+        @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
+        .fake-sources { display: flex; gap: 8px; margin-top: 12px; }
+        .fake-chip { font-size: 10px; border: 0.5px solid #ddd; padding: 4px 10px; color: #bbb; letter-spacing: 0.04em; }
+ 
+        .btn-home {
+            font-family: 'Courier New', monospace;
+            font-size: 15px;
+            padding: 16px 32px;
+            background: #111;
+            color: #fff;
+            border: none;
+            cursor: pointer;
+            letter-spacing: 0.06em;
+            text-decoration: none;
+            display: inline-block;
+            margin-bottom: 32px;
+        }
+        .btn-home:hover { background: #333; }
+        .footer-note { font-size: 11px; color: #bbb; letter-spacing: 0.04em; }
+    </style>
+</head>
+<body>
+ 
+<nav class="nav">
+    <a href="index.html" class="nav-logo">
+        <div class="logo-mark">NL</div>
+        <span class="nav-logo-text">NEWSLENS</span>
+    </a>
+</nav>
+ 
+<div class="breaking-bar">
+    <span class="breaking-label">Breaking</span>
+    <span class="breaking-text">BREAKING: Entire webpage goes missing — journalist dispatched immediately *** EXCLUSIVE: URL last seen at 11:47 PM, suspect still at large *** DEVELOPING: Browser unable to locate content, investigation ongoing *** SOURCES SAY: This page never existed. We checked six times. *** JUST IN: 404 error strikes again, experts baffled *** OUR REPORTER is on the ground. Updates every few seconds.</span>
+</div>
+ 
+<div class="main">
+ 
+    <div class="error-code">404</div>
+    <div class="headline">Page Not Found — Our Reporter Is On The Ground</div>
+ 
+    <div class="reporter-section">
+        <div class="reporter-header">
+            <div class="reporter-header-left">
+                <div class="live-dot"></div>
+                <span>NEWSLENS LIVE COVERAGE</span>
+            </div>
+            <span class="reporter-location" id="reporterLocation">📍 Scene of the 404</span>
+        </div>
+        <div class="reporter-body">
+            <div class="reporter-avatar-wrap">
+                <div class="reporter-avatar">🧑</div>
+                <div class="speaking-bars">
+                    <div class="bar"></div>
+                    <div class="bar"></div>
+                    <div class="bar"></div>
+                    <div class="bar"></div>
+                    <div class="bar"></div>
+                </div>
+            </div>
+            <div class="reporter-dialogue">
+                <div class="reporter-name">Rajesh Kumar — Field Correspondent</div>
+                <div class="reporter-text" id="reporterText"><span class="cursor"></span></div>
+            </div>
+        </div>
+        <div class="reporter-footer">
+            <span id="reporterCounter">Update 1 of 6</span>
+            <button class="next-btn" onclick="nextUpdate()">Next Update →</button>
+        </div>
+    </div>
+ 
+    <div class="fake-article">
+        <div class="fake-article-label">Developing Story — Summary Unavailable</div>
+        <div class="fake-lines">
+            <div class="fake-line"></div>
+            <div class="fake-line"></div>
+            <div class="fake-line"></div>
+            <div class="fake-line"></div>
+        </div>
+        <div class="fake-sources">
+            <span class="fake-chip">NDTV</span>
+            <span class="fake-chip">The Hindu</span>
+            <span class="fake-chip">BBC</span>
+            <span class="fake-chip">Indian Express</span>
+        </div>
+    </div>
+ 
+    <a href="index.html" class="btn-home">Back to Real News</a>
+    <div class="footer-note">Error 404 &middot; Page Not Found &middot; NewsLens</div>
+ 
+</div>
+ 
+<script>
+    const updates = [
+        {
+            text: "Yes, I am standing right here at the scene of the 404. It is very quiet. The page was supposed to be here. It is not. Locals say they have not seen it since yesterday. We are trying to get comment from the server but it is not picking up.",
+            location: "📍 Scene of the 404"
+        },
+        {
+            text: "Breaking update. I have just spoken to a witness. A browser tab that was open nearby. It says, and I quote, it just disappeared. One moment it was loading, next moment, nothing. Very tragic scenes here.",
+            location: "📍 Near the Missing URL"
+        },
+        {
+            text: "We are now getting reports that six news sources were contacted to confirm this page's existence. NDTV said no comment. The Hindu is still investigating. BBC called back but got disconnected. Indian Express filed an RTI.",
+            location: "📍 Outside the Server Room"
+        },
+        {
+            text: "I have just received word that the URL was last seen at 11:47 PM on an unknown date. A search party has been organized. If you have any information about this page's whereabouts, please contact your system administrator.",
+            location: "📍 Undisclosed Location"
+        },
+        {
+            text: "This is now being described as the most mysterious disappearance since last Tuesday when someone accidentally deleted the staging server. Our IT correspondent is on his way. He got lost.",
+            location: "📍 Lost, Somewhere Near WiFi"
+        },
+        {
+            text: "Final update from the ground. The page is still missing. We have filed a report. The report is also missing. My editor says go home Rajesh. I am going home. Please click the button below. Thank you for watching NewsLens.",
+            location: "📍 Going Home"
+        }
+    ];
+ 
+    let currentUpdate = 0;
+    let typing = false;
+    let audioCtx = null;
+ 
+    function getAudioCtx() {
+        if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        return audioCtx;
+    }
+ 
+    function playClick() {
+        try {
+            const ctx = getAudioCtx();
+            const osc = ctx.createOscillator();
+            const gain = ctx.createGain();
+            osc.connect(gain);
+            gain.connect(ctx.destination);
+            osc.frequency.value = 700 + Math.random() * 300;
+            gain.gain.setValueAtTime(0.04, ctx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.04);
+            osc.start(ctx.currentTime);
+            osc.stop(ctx.currentTime + 0.04);
+        } catch(e) {}
+    }
+ 
+    function typeText(text) {
+        const el = document.getElementById('reporterText');
+        el.innerHTML = '';
+        typing = true;
+        let i = 0;
+ 
+        function typeChar() {
+            if (i < text.length) {
+                el.innerHTML = text.slice(0, i + 1) + '<span class="cursor"></span>';
+                i++;
+                if (i % 2 === 0) playClick();
+                setTimeout(typeChar, 25 + Math.random() * 25);
+            } else {
+                el.innerHTML = text + '<span class="cursor"></span>';
+                typing = false;
+            }
+        }
+        typeChar();
+    }
+ 
+    function nextUpdate() {
+        if (typing) return;
+        if (currentUpdate >= updates.length) currentUpdate = 0;
+        const update = updates[currentUpdate];
+        document.getElementById('reporterLocation').textContent = update.location;
+        document.getElementById('reporterCounter').textContent = `Update ${currentUpdate + 1} of ${updates.length}`;
+        typeText(update.text);
+        currentUpdate++;
+    }
+ 
+    setTimeout(() => {
+        nextUpdate();
+        setInterval(() => {
+            if (!typing) nextUpdate();
+        }, 10000);
+    }, 600);
+</script>
+ 
+</body>
+</html>
+ 
