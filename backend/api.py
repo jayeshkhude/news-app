@@ -1081,7 +1081,7 @@ def admin_analytics():
             SELECT s.id, COALESCE(s.headline, s.topic) AS title, COALESCE(SUM(v.vote), 0) AS score
             FROM summaries s
             LEFT JOIN news_votes v ON v.summary_id = s.id
-            WHERE date(s.created_at) = CURRENT_DATE OR s.summary_date = CURRENT_DATE
+            WHERE date(s.created_at) = CURRENT_DATE OR s.summary_date::DATE = CURRENT_DATE
             GROUP BY s.id
             ORDER BY score DESC, s.id DESC
             LIMIT 20
@@ -1138,7 +1138,7 @@ def admin_analytics():
             """
             SELECT category, COUNT(*) AS c
             FROM summaries
-            WHERE COALESCE(category, '') != '' AND summary_date >= CURRENT_DATE - INTERVAL '7 days'
+            WHERE COALESCE(category, '') != '' AND summary_date::DATE >= CURRENT_DATE - INTERVAL '7 days'
             GROUP BY category
             ORDER BY c DESC
             """
