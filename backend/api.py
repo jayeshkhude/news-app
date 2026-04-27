@@ -572,7 +572,7 @@ def search():
         SELECT id, topic, headline, summary, sources, article_links, created_at, category,
                importance_score, summary_date
         FROM summaries
-        WHERE topic LIKE ? OR summary LIKE ? OR IFNULL(headline, '') LIKE ?
+        WHERE topic LIKE ? OR summary LIKE ? OR COALESCE(headline, '') LIKE ?
         ORDER BY created_at DESC
         LIMIT 10
         """,
@@ -1075,17 +1075,30 @@ def admin_analytics():
     comment_count = int(cursor.fetchone()["c"])
     cursor.execute("SELECT COUNT(*) AS c FROM news_votes")
     vote_count = int(cursor.fetchone()["c"])
-    cursor.execute(
-        """
-        SELECT s.id, IFNULL(s.headline, s.topic) AS title, COALESCE(SUM(v.vote), 0) AS score
-        FROM summaries s
-        LEFT JOIN news_votes v ON v.summary_id = s.id
-        WHERE date(s.created_at) = date('now', 'localtime') OR s.summary_date = date('now', 'localtime')
-        GROUP BY s.id
-        ORDER BY score DESC, s.id DESC
-        LIMIT 20
-        """
-    )
+    if is_postgres():
+        cursor.execute(
+            """
+            SELECT s.id, COALESCE(s.headline, s.topic) AS title, COALESCE(SUM(v.vote), 0) AS score
+            FROM summaries s
+            LEFT JOIN news_votes v ON v.summary_id = s.id
+            WHERE date(s.created_at) = CURRENT_DATE OR s.summary_date = CURRENT_DATE
+            GROUP BY s.id
+            ORDER BY score DESC, s.id DESC
+            LIMIT 20
+            """
+        )
+    else:
+        cursor.execute(
+            """
+            SELECT s.id, COALESCE(s.headline, s.topic) AS title, COALESCE(SUM(v.vote), 0) AS score
+            FROM summaries s
+            LEFT JOIN news_votes v ON v.summary_id = s.id
+            WHERE date(s.created_at) = date('now', 'localtime') OR s.summary_date = date('now', 'localtime')
+            GROUP BY s.id
+            ORDER BY score DESC, s.id DESC
+            LIMIT 20
+            """
+        )
     top_news = [{"id": r["id"], "title": r["title"], "score": int(r["score"])} for r in cursor.fetchall()]
     cursor.execute(
         """
@@ -1098,25 +1111,47 @@ def admin_analytics():
     )
     daily = [{"day": r["day"], "summaries": int(r["c"])} for r in cursor.fetchall()]
 
-    cursor.execute(
-        """
-        SELECT source, COUNT(*) AS c
-        FROM articles
-        WHERE IFNULL(source, '') != '' AND date(fetched_at) >= date('now', '-7 days', 'localtime')
-        GROUP BY source
-        ORDER BY c DESC
-        """
-    )
+    if is_postgres():
+        cursor.execute(
+            """
+            SELECT source, COUNT(*) AS c
+            FROM articles
+            WHERE COALESCE(source, '') != '' AND date(fetched_at) >= CURRENT_DATE - INTERVAL '7 days'
+            GROUP BY source
+            ORDER BY c DESC
+            """
+        )
+    else:
+        cursor.execute(
+            """
+            SELECT source, COUNT(*) AS c
+            FROM articles
+            WHERE COALESCE(source, '') != '' AND date(fetched_at) >= date('now', '-7 days', 'localtime')
+            GROUP BY source
+            ORDER BY c DESC
+            """
+        )
     articles_by_source = [{"source": r["source"], "count": int(r["c"])} for r in cursor.fetchall()]
 
-    cursor.execute(
-        """
-        SELECT category, COUNT(*) AS c
-        FROM summaries
-        WHERE IFNULL(category, '') != '' AND summary_date >= date('now', '-7 days', 'localtime')
-        GROUP BY category
-        ORDER BY c DESC
-        """
+    if is_postgres():
+        cursor.execute(
+            """
+            SELECT category, COUNT(*) AS c
+            FROM summaries
+            WHERE COALESCE(category, '') != '' AND summary_date >= CURRENT_DATE - INTERVAL '7 days'
+            GROUP BY category
+            ORDER BY c DESC
+            """
+        )
+    else:
+        cursor.execute(
+            """
+            SELECT category, COUNT(*) AS c
+            FROM summaries
+            WHERE COALESCE(category, '') != '' AND summary_date >= date('now', '-7 days', 'localtime')
+            GROUP BY category
+            ORDER BY c DESC
+            """
     )
     summaries_by_category = [{"category": r["category"], "count": int(r["c"])} for r in cursor.fetchall()]
 

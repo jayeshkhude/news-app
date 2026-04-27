@@ -191,7 +191,7 @@ def collect_articles():
                             INSERT INTO articles 
                             (title, link, source, description, published, fetched_at, title_hash, link_canonical, image_url)
                             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-                            ON CONFLICT DO NOTHING
+                            ON CONFLICT (link) DO NOTHING
                         '''
                     cursor.execute(insert_sql, (title, link, source, description, published, datetime.now(IST).isoformat(timespec="seconds"), title_hash, canonical_link, image_url))
                     if cursor.rowcount > 0:
