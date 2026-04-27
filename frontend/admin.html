@@ -1,0 +1,467 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NewsLens — Admin</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Inter', sans-serif; background: #f9f8f6; color: #1a1a1a; font-size: 15px; line-height: 1.6; }
+
+        .nav {
+            position: sticky; top: 0;
+            background: #f9f8f6;
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 24px 48px;
+            border-bottom: 1px solid rgba(0,0,0,0.08);
+            z-index: 100;
+        }
+        .nav-logo { display: flex; align-items: center; gap: 8px; text-decoration: none; color: #1a1a1a; }
+        .nav-logo-text { font-size: 19px; letter-spacing: 0.1em; font-weight: 700; font-family: monospace; text-transform: uppercase; margin: 0; }
+        .nav-logo-text span { font-weight: 400; }
+        
+        .nav-actions { display: flex; gap: 24px; align-items: center; }
+        .nav-actions a, .nav-actions button {
+            color: #4b5563; text-decoration: none; font-size: 14px; font-weight: 500;
+            background: none; border: none; cursor: pointer; font-family: inherit; transition: color 0.2s;
+        }
+        .nav-actions a:hover, .nav-actions button:hover { color: #1a1a1a; }
+
+        .wrap { padding: 64px 48px; max-width: 980px; margin: 0 auto; }
+        h1 { font-size: 28px; font-weight: 800; letter-spacing: -0.02em; margin-bottom: 12px; }
+        p { font-size: 16px; color: #4b5563; line-height: 1.6; margin-bottom: 32px; }
+
+        .row { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; margin-bottom: 24px; }
+        button {
+            padding: 12px 20px; background: #111; color: #fff; border: none; cursor: pointer; border-radius: 8px;
+            font-family: 'Inter', sans-serif; font-size: 14px; font-weight: 600; letter-spacing: 0.02em;
+            transition: background 0.2s, transform 0.15s, box-shadow 0.2s;
+            box-shadow: 0 4px 14px rgba(0,0,0,0.1);
+        }
+        button:hover { background: #2563eb; transform: translateY(-2px); box-shadow: 0 6px 20px rgba(37,99,235,0.2); }
+        button.secondary { background: #fff; color: #111; border: 1px solid #d1d5db; box-shadow: none; }
+        button.secondary:hover { background: #f9fafb; border-color: #111; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
+        button:disabled { opacity: 0.5; cursor: not-allowed; transform: none; box-shadow: none; }
+
+        .warn {
+            border: 0.5px solid #e0e0e0;
+            padding: 14px 16px;
+            font-size: 12px;
+            color: #666;
+            line-height: 1.7;
+            margin-bottom: 22px;
+        }
+
+        .list { border: 0.5px solid #ccc; }
+        .item {
+            display: grid;
+            grid-template-columns: 80px 1fr 140px;
+            gap: 18px;
+            padding: 16px 18px;
+            border-bottom: 0.5px solid #eee;
+            align-items: start;
+        }
+        .item:last-child { border-bottom: none; }
+        .id { font-size: 12px; color: #888; }
+        .msg { font-size: 13px; line-height: 1.7; color: #111; white-space: pre-wrap; overflow-wrap: anywhere; }
+        .time { font-size: 12px; color: #888; margin-top: 6px; }
+        .actions { display: flex; justify-content: flex-end; }
+        .actions button { padding: 10px 12px; font-size: 12px; }
+
+        .status { font-size: 12px; color: #888; margin-top: 14px; }
+
+        .section-title {
+            margin-top: 34px;
+            font-size: 13px;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+            color: #666;
+            margin-bottom: 12px;
+        }
+
+        .kv {
+            border: 0.5px solid #e0e0e0;
+            padding: 14px 16px;
+            font-size: 12px;
+            color: #666;
+            line-height: 1.8;
+            margin-bottom: 16px;
+        }
+        .kv b { color: #111; }
+
+        pre {
+            border: 0.5px solid #ccc;
+            padding: 16px 18px;
+            overflow: auto;
+            font-size: 13px;
+            line-height: 1.6;
+            color: #111;
+            background: #fafafa;
+            white-space: pre;
+        }
+
+        .data-panel {
+            border: 0.5px solid #ccc;
+            max-height: 380px;
+            overflow-y: auto;
+            margin-bottom: 28px;
+            background: #fafafa;
+        }
+        .data-row {
+            padding: 14px 18px;
+            border-bottom: 0.5px solid #eee;
+            font-size: 14px;
+            line-height: 1.55;
+        }
+        .data-row:last-child { border-bottom: none; }
+        .data-row .t { color: #111; margin-bottom: 6px; }
+        .data-row .meta { font-size: 13px; color: #666; }
+        .data-row a { color: #111; word-break: break-word; }
+
+        .danger { background: #b00020 !important; }
+    </style>
+</head>
+<body>
+<nav class="nav">
+    <a class="nav-logo" href="/home">
+        <span class="nav-logo-text">NEWSL<span>E</span>NS</span>
+    </a>
+    <div class="nav-actions">
+        <a href="/analytics">Analytics</a>
+        <button type="button" onclick="logout()">Log out</button>
+    </div>
+</nav>
+
+<div class="wrap">
+    <h1>Admin panel</h1>
+    <p>Signed in with a server session. Use <strong>Log out</strong> when finished.</p>
+
+    <div class="warn">
+        - Destructive actions are permanent.<br>
+        - Set <code>ADMIN_TOKEN</code> (and optionally <code>FLASK_SECRET_KEY</code>) on the server.
+    </div>
+
+    <div class="section-title">Ingest &amp; summarize</div>
+    <div class="row">
+        <button type="button" class="secondary" onclick="runPipeline(false)">Scheduled-style run</button>
+        <button type="button" onclick="runPipeline(true)">Force summarize</button>
+    </div>
+    <div id="pipelineHint" class="status" style="margin-top:-8px;margin-bottom:18px;">
+        Scheduled-style: skips summarization if RSS added nothing. Force: always clusters and summarizes from articles already in the database (same-day duplicate link sets are skipped).
+    </div>
+
+    <div class="row">
+        <button id="btnRefresh" onclick="refresh()">Refresh admin</button>
+        <button type="button" class="secondary" id="btnViewData" onclick="loadData()">View data</button>
+        <button type="button" class="secondary" id="btnDownload" onclick="downloadData()">Download data</button>
+        <button type="button" class="secondary" id="btnBackup" onclick="createBackup()">Backup to DB</button>
+        <button type="button" class="danger" id="btnPurge" onclick="purgeAllData()">Delete all data</button>
+    </div>
+
+    <div class="section-title">Database</div>
+    <div id="stats" class="kv">Not loaded.</div>
+
+    <div id="dataPanels" style="display:none;">
+        <div class="section-title">Articles pulled (newest → past)</div>
+        <div id="panelArticles" class="data-panel"></div>
+
+        <div class="section-title">Summaries stored (newest → past)</div>
+        <div id="panelSummaries" class="data-panel"></div>
+
+        <div class="section-title">Latest news (same order as public homepage)</div>
+        <div id="panelLatest" class="data-panel"></div>
+    </div>
+
+    <div class="section-title">Legacy Chat (removed)</div>
+    <div id="list" class="list"></div>
+    <div id="status" class="status"></div>
+</div>
+
+<script>
+    const API = localStorage.getItem('API_BASE') || '';
+
+    function adminFetch(path, options = {}) {
+        const url = `${API}${path}`;
+        const { headers: h = {}, ...rest } = options;
+        return fetch(url, {
+            credentials: 'same-origin',
+            ...rest,
+            headers: h,
+        });
+    }
+
+    function redirectLogin() {
+        window.location.replace('/admin-login');
+    }
+
+    function setStatus(text) {
+        document.getElementById('status').textContent = text || '';
+    }
+
+    async function safeJson(res) {
+        const ct = (res.headers.get('content-type') || '').toLowerCase();
+        if (!ct.includes('application/json')) {
+            return { _notJson: true };
+        }
+        return res.json();
+    }
+
+    async function requireSession(res) {
+        if (res.status === 401) {
+            redirectLogin();
+            return false;
+        }
+        return true;
+    }
+
+    async function logout() {
+        try {
+            await adminFetch('/api/admin/logout', { method: 'POST' });
+        } catch (e) { /* ignore */ }
+        redirectLogin();
+    }
+
+    async function runPipeline(force) {
+        const hint = document.getElementById('pipelineHint');
+        hint.textContent = 'Starting pipeline in the background… watch the server console. This can take a minute.';
+        try {
+            const res = await adminFetch('/api/admin/run-pipeline', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ force })
+            });
+            if (!(await requireSession(res))) return;
+            const data = await safeJson(res);
+            if (!res.ok) {
+                hint.textContent = (data && data.error) ? data.error : 'Could not start pipeline.';
+                return;
+            }
+            hint.textContent = 'Pipeline started. Refresh the homepage “latest news” after it finishes. Force=' + (data.force ? 'yes' : 'no');
+        } catch (e) {
+            hint.textContent = 'Could not reach server.';
+        }
+    }
+
+    function fmtWhen(isoish) {
+        if (!isoish) return '—';
+        let s = String(isoish);
+        if (/^\d{4}-\d{2}-\d{2} /.test(s)) s = s.replace(' ', 'T');
+        const d = Date.parse(s);
+        if (!Number.isNaN(d)) {
+            return new Date(d).toLocaleString('en-IN', { year: 'numeric', month: 'short', day: '2-digit', hour: '2-digit', minute: '2-digit' });
+        }
+        return String(isoish).replace('T', ' ').slice(0, 19);
+    }
+
+    async function loadData() {
+        setStatus('Loading DB data…');
+        document.getElementById('dataPanels').style.display = 'none';
+
+        try {
+            const statsRes = await adminFetch('/api/admin/stats');
+            if (!(await requireSession(statsRes))) return;
+            const statsData = await safeJson(statsRes);
+            if (statsData._notJson) { setStatus('Server error (not JSON).'); return; }
+            if (!statsRes.ok) { setStatus(statsData.error || 'Failed to load stats.'); return; }
+
+            document.getElementById('stats').innerHTML =
+                `<b>Articles:</b> ${statsData.articles}<br>` +
+                `<b>Summaries:</b> ${statsData.summaries}<br>` +
+                `<b>Chat messages:</b> ${statsData.chat_messages}<br>` +
+                `<b>Custom prompt uses:</b> ${statsData.custom_prompt_uses}`;
+
+            const latestRes = await adminFetch('/api/admin/latest?limit=40');
+            if (!(await requireSession(latestRes))) return;
+            const d = await safeJson(latestRes);
+            if (d._notJson) { setStatus('Server error (not JSON).'); return; }
+            if (!latestRes.ok) { setStatus(d.error || 'Failed to load latest rows.'); return; }
+
+            const articles = d.articles_pulled || d.articles || [];
+            const summaries = d.summaries || [];
+            const latest = d.latest_news || [];
+
+            const pa = document.getElementById('panelArticles');
+            pa.innerHTML = '';
+            if (!articles.length) {
+                pa.textContent = 'No articles.';
+            } else {
+                articles.forEach(a => {
+                    const row = document.createElement('div');
+                    row.className = 'data-row';
+                    const t = document.createElement('div');
+                    t.className = 't';
+                    t.textContent = a.title || '(no title)';
+                    const meta = document.createElement('div');
+                    meta.className = 'meta';
+                    meta.textContent = `#${a.id} · ${a.source || ''} · ${fmtWhen(a.fetched_at || a.published)}`;
+                    const link = document.createElement('a');
+                    link.href = a.link || '#';
+                    link.target = '_blank';
+                    link.rel = 'noopener noreferrer';
+                    link.textContent = a.link || '';
+                    row.appendChild(t);
+                    row.appendChild(meta);
+                    if (a.link) row.appendChild(link);
+                    pa.appendChild(row);
+                });
+            }
+
+            const ps = document.getElementById('panelSummaries');
+            ps.innerHTML = '';
+            if (!summaries.length) {
+                ps.textContent = 'No summaries.';
+            } else {
+                summaries.forEach(s => {
+                    const row = document.createElement('div');
+                    row.className = 'data-row';
+                    const t = document.createElement('div');
+                    t.className = 't';
+                    t.textContent = (s.headline || s.topic || '').slice(0, 200);
+                    const meta = document.createElement('div');
+                    meta.className = 'meta';
+                    meta.textContent = `#${s.id} · ${s.category || ''} · ${s.summary_date || ''} · ${fmtWhen(s.created_at)}`;
+                    row.appendChild(t);
+                    row.appendChild(meta);
+                    ps.appendChild(row);
+                });
+            }
+
+            const pl = document.getElementById('panelLatest');
+            pl.innerHTML = '';
+            if (!latest.length) {
+                pl.textContent = 'No rows for latest-news window.';
+            } else {
+                latest.forEach(x => {
+                    const row = document.createElement('div');
+                    row.className = 'data-row';
+                    const t = document.createElement('div');
+                    t.className = 't';
+                    t.textContent = (x.headline || x.topic || '').slice(0, 200);
+                    const meta = document.createElement('div');
+                    meta.className = 'meta';
+                    const nsrc = (x.sources && x.sources.length) ? x.sources.length : 0;
+                    meta.textContent = `#${x.id} · ${nsrc} source(s) · ${fmtWhen(x.created_at)}`;
+                    row.appendChild(t);
+                    row.appendChild(meta);
+                    pl.appendChild(row);
+                });
+            }
+
+            document.getElementById('dataPanels').style.display = 'block';
+            setStatus('Loaded DB data.');
+        } catch (e) {
+            setStatus('Could not load DB data.');
+        }
+    }
+
+    async function refresh() {
+        setStatus('Loading…');
+        try {
+            const ping = await adminFetch('/api/admin/ping');
+            if (!(await requireSession(ping))) return;
+            const pingData = await safeJson(ping);
+            if (!ping.ok || pingData._notJson) {
+                setStatus('Session invalid.');
+                redirectLogin();
+                return;
+            }
+        } catch (e) {
+            setStatus('Could not verify session.');
+            return;
+        }
+
+        try {
+            document.getElementById('list').innerHTML = '<div class="item">Chat section has been removed from the product.</div>';
+            setStatus('Admin is live.');
+        } catch (e) {
+            setStatus('Refresh failed.');
+        }
+    }
+
+    async function createBackup() {
+        setStatus('Creating backup snapshot…');
+        try {
+            const res = await adminFetch('/api/admin/backup', { method: 'POST' });
+            if (!(await requireSession(res))) return;
+            const data = await safeJson(res);
+            if (!res.ok) {
+                setStatus((data && data.error) ? data.error : 'Backup failed.');
+                return;
+            }
+            setStatus(`Backup created (#${data.backup_id}) at ${data.created_at}.`);
+        } catch (e) {
+            setStatus('Backup failed.');
+        }
+    }
+
+    async function downloadData() {
+        setStatus('Preparing download…');
+        try {
+            const res = await adminFetch('/api/admin/export-file?all=1');
+            if (!(await requireSession(res))) return;
+            if (!res.ok) {
+                const err = await safeJson(res);
+                setStatus((err && !err._notJson && err.error) ? err.error : 'Export failed.');
+                return;
+            }
+            const blob = await res.blob();
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            const ts = new Date().toISOString().replace(/:/g, '-');
+            a.href = url;
+            a.download = `newslens-export-${ts}.json`;
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+            URL.revokeObjectURL(url);
+            setStatus('Download started (JSON file).');
+        } catch (e) {
+            setStatus('Export failed.');
+        }
+    }
+
+    async function purgeAllData() {
+        const phrase = prompt('Type exactly: delete will be permanent');
+        if (!phrase) return;
+        setStatus('Purging…');
+        try {
+            const res = await adminFetch('/api/admin/purge', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ confirm: phrase })
+            });
+            if (!(await requireSession(res))) return;
+            const data = await res.json();
+            if (!res.ok) { setStatus(data.error || 'Purge failed.'); return; }
+            document.getElementById('stats').textContent = 'Not loaded.';
+            document.getElementById('dataPanels').style.display = 'none';
+            await refresh();
+            setStatus('All data deleted permanently.');
+        } catch (e) {
+            setStatus('Purge failed.');
+        }
+    }
+
+    (async function initAdmin() {
+        document.getElementById('stats').textContent = 'Not loaded.';
+        document.getElementById('dataPanels').style.display = 'none';
+        try {
+            const r = await adminFetch('/api/admin/ping');
+            if (r.status === 401) {
+                redirectLogin();
+                return;
+            }
+            if (!r.ok) {
+                setStatus('Admin unavailable.');
+                return;
+            }
+        } catch (e) {
+            redirectLogin();
+            return;
+        }
+        await refresh();
+    })();
+</script>
+</body>
+</html>

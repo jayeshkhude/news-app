@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NewsLens — Admin sign in</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Inter', sans-serif; background: #f5f7fa; color: #111; font-size: 16px; min-height: 100vh; display: flex; flex-direction: column; line-height: 1.6; }
+        .nav {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 24px 48px; border-bottom: 1px solid #e5e7eb;
+            background: rgba(255,255,255,0.98); box-shadow: 0 2px 10px rgba(0,0,0,0.03);
+        }
+        .nav-logo { display: flex; align-items: center; gap: 12px; text-decoration: none; color: #111; }
+        .logo-mark {
+            width: 36px; height: 36px; background: linear-gradient(135deg, #111, #374151); border-radius: 8px;
+            display: flex; align-items: center; justify-content: center;
+            color: #fff;
+            transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.3s ease;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.15);
+        }
+        .nav-logo:hover .logo-mark { transform: rotate(45deg) scale(1.1); background: linear-gradient(135deg, #2563eb, #1d4ed8); box-shadow: 0 4px 12px rgba(37,99,235,0.3); }
+        .nav-logo-text { font-size: 18px; letter-spacing: 0.05em; font-weight: 800; }
+        .nav-right { color: #4b5563; text-decoration: none; font-size: 15px; font-weight: 500; transition: color 0.2s; }
+        .nav-right:hover { color: #111; }
+        .wrap { flex: 1; padding: 64px 48px; max-width: 480px; margin: 40px auto; background: #fff; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.04); border: 1px solid #e5e7eb; }
+        h1 { font-size: 24px; font-weight: 800; margin-bottom: 12px; letter-spacing: -0.02em; }
+        p { font-size: 15px; color: #4b5563; line-height: 1.6; margin-bottom: 32px; }
+        label { display: block; font-size: 12px; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase; color: #6b7280; margin-bottom: 8px; }
+        input[type="password"] {
+            width: 100%; padding: 14px 16px; border: 1px solid #d1d5db; outline: none; border-radius: 8px;
+            font-family: 'Inter', sans-serif; font-size: 15px; margin-bottom: 24px; transition: border-color 0.2s, box-shadow 0.2s;
+        }
+        input:focus { border-color: #2563eb; box-shadow: 0 0 0 3px rgba(37,99,235,0.1); }
+        button {
+            width: 100%; padding: 16px; background: #111; color: #fff; border: none; cursor: pointer; border-radius: 8px;
+            font-family: 'Inter', sans-serif; font-size: 15px; font-weight: 600; letter-spacing: 0.02em; transition: background 0.2s, transform 0.15s, box-shadow 0.2s;
+            box-shadow: 0 4px 14px rgba(0,0,0,0.1);
+        }
+        button:hover { background: #2563eb; transform: translateY(-2px); box-shadow: 0 6px 20px rgba(37,99,235,0.2); }
+        button:disabled { opacity: 0.5; cursor: not-allowed; transform: none; box-shadow: none; }
+        .err { font-size: 13px; font-weight: 500; color: #ef4444; margin-top: 16px; min-height: 1.2em; text-align: center; }
+    </style>
+</head>
+<body>
+<nav class="nav">
+    <a class="nav-logo" href="/home">
+        <span class="nav-logo-text" style="font-family: monospace; letter-spacing: 0.1em; font-size: 19px;">NEWSL<span style="font-weight: 400;">E</span>NS</span>
+    </a>
+    <a href="/home" class="nav-right">← Home</a>
+</nav>
+<div class="wrap">
+    <h1>Admin</h1>
+    <p>Enter the admin token from your server environment (<code>ADMIN_TOKEN</code>). You will stay signed in until you log out or close the browser session.</p>
+    <label for="token">Admin token</label>
+    <input type="password" id="token" placeholder="Token" autocomplete="off" />
+    <button type="button" id="btnGo" onclick="doLogin()">Continue to admin panel</button>
+    <div class="err" id="err"></div>
+</div>
+<script>
+    const API = localStorage.getItem('API_BASE') || '';
+    document.getElementById('token').addEventListener('keypress', e => {
+        if (e.key === 'Enter') doLogin();
+    });
+    async function doLogin() {
+        const token = document.getElementById('token').value.trim();
+        const err = document.getElementById('err');
+        const btn = document.getElementById('btnGo');
+        err.textContent = '';
+        if (!token) { err.textContent = 'Enter the token.'; return; }
+        btn.disabled = true;
+        try {
+            const res = await fetch(`${API}/api/admin/login`, {
+                method: 'POST',
+                credentials: 'same-origin',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ token })
+            });
+            const data = await res.json().catch(() => ({}));
+            if (!res.ok) {
+                err.textContent = data.error || 'Sign-in failed.';
+                btn.disabled = false;
+                return;
+            }
+            window.location.href = '/overlord';
+        } catch (e) {
+            err.textContent = 'Could not reach server.';
+            btn.disabled = false;
+        }
+    }
+</script>
+</body>
+</html>

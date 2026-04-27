@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NewsLens — Contact</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { 
+            font-family: 'Inter', sans-serif; background-color: #f9f8f6; color: #1a1a1a; font-size: 16px; line-height: 1.6; 
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200' viewBox='0 0 100 100'%3E%3Cg stroke='rgba(0,0,0,0.04)' stroke-width='0.4' fill='none'%3E%3Cpath d='M0 20 Q 30 50, 100 10' /%3E%3Cpath d='M10 100 Q 50 30, 90 0' /%3E%3Cpath d='M0 60 Q 40 80, 100 50' /%3E%3Cpath d='M20 0 Q 70 50, 30 100' /%3E%3Cpath d='M0 80 Q 50 100, 100 70' /%3E%3Cpath d='M80 0 Q 100 50, 70 100' /%3E%3C/g%3E%3C/svg%3E");
+            background-attachment: fixed;
+            animation: bgDrift 60s linear infinite;
+        }
+
+        #progressBar {
+            position: fixed; top: 0; left: 0;
+            height: 3px; background: #1a1a1a; width: 0%;
+            z-index: 9999; transition: width 0.1s linear;
+        }
+
+        .nav {
+            position: sticky; top: 0;
+            background: #f9f8f6;
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 24px 48px; border-bottom: 1px solid rgba(0,0,0,0.08);
+            z-index: 100; transition: padding 0.3s ease;
+        }
+        .nav.scrolled { padding: 16px 48px; }
+        .nav-logo { display: flex; align-items: center; gap: 8px; text-decoration: none; color: #1a1a1a; }
+        .nav-logo-text { font-size: 19px; letter-spacing: 0.1em; font-weight: 700; font-family: monospace; text-transform: uppercase; margin: 0; }
+        .nav-logo-text span { font-weight: 400; }
+        
+        .nav-back {
+            font-size: 14px; font-weight: 500; color: #4b5563; text-decoration: none;
+            transition: color 0.2s;
+        }
+        .nav-back:hover { color: #1a1a1a; }
+
+        .content {
+            padding: 64px 48px; max-width: 680px; margin: 48px auto; background: transparent; border-radius: 8px; border: 1px solid rgba(0,0,0,0.1);
+        }
+        .tag {
+            font-size: 13px; font-weight: 600; letter-spacing: 0.1em; color: #2563eb;
+            text-transform: uppercase; margin-bottom: 20px;
+            opacity: 0; animation: fadeUp 0.5s ease forwards 0.05s;
+        }
+        h1 {
+            font-size: clamp(32px, 4vw, 44px); font-weight: 400; font-family: 'Times New Roman', serif; letter-spacing: -0.02em; margin-bottom: 16px; color: #1a1a1a;
+            opacity: 0; animation: fadeUp 0.6s ease forwards 0.15s;
+        }
+        .sub {
+            font-size: 16px; color: #4b5563; line-height: 1.6; margin-bottom: 48px;
+            opacity: 0; animation: fadeUp 0.6s ease forwards 0.25s;
+        }
+        @keyframes fadeUp {
+            from { opacity: 0; transform: translateY(16px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .contact-item {
+            display: flex; gap: 32px; padding: 24px 0;
+            border-bottom: 1px solid #f3f4f6; align-items: flex-start;
+            transition: border-color 0.2s;
+            opacity: 0; transform: translateY(12px);
+        }
+        .contact-item.visible { animation: fadeUp 0.45s ease forwards; }
+        .contact-item:last-child { border-bottom: none; }
+        .contact-label {
+            font-size: 12px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase;
+            color: #6b7280; min-width: 120px; padding-top: 2px;
+        }
+        .contact-value { font-size: 15px; color: #111; line-height: 1.6; }
+        .contact-value a {
+            color: #2563eb; text-decoration: none; font-weight: 500; transition: text-decoration 0.2s;
+        }
+        .contact-value a:hover { text-decoration: underline; }
+
+        .notice {
+            margin-top: 40px; padding: 20px 24px;
+            border: 1px solid #e5e7eb; border-radius: 8px; background: #f9fafb;
+            font-size: 14px; font-weight: 500; color: #4b5563; line-height: 1.6;
+            opacity: 0; animation: fadeUp 0.5s ease forwards 0.5s;
+        }
+
+        .footer-bottom {
+            margin-top: auto;
+            padding: 24px 48px; border-top: 1px solid #e5e7eb;
+            background: rgba(255,255,255,0.98);
+            display: flex; justify-content: space-between;
+            font-size: 13px; font-weight: 500; color: #9ca3af;
+        }
+    </style>
+</head>
+<body>
+
+<div id="progressBar"></div>
+
+<nav class="nav" id="mainNav">
+    <a class="nav-logo" href="/home">
+        <span class="nav-logo-text">NEWSL<span>E</span>NS</span>
+    </a>
+    <a class="nav-back" href="/home">← Back to News</a>
+</nav>
+
+<div class="content">
+    <div class="tag">Contact</div>
+    <h1>Contact NewsLens.</h1>
+    <p class="sub">For bug reports, feedback, collaborations, or privacy concerns, use the contact details below.</p>
+
+    <div class="contact-item">
+        <span class="contact-label">Email</span>
+        <span class="contact-value"><a href="mailto:jayeshkhude4@gmail.com">jayeshkhude4@gmail.com</a></span>
+    </div>
+    <div class="contact-item">
+        <span class="contact-label">For bugs</span>
+        <span class="contact-value">Share what happened, the page URL, and approximate time. Screenshots help us fix issues faster.</span>
+    </div>
+    <div class="contact-item">
+        <span class="contact-label">For ideas</span>
+        <span class="contact-value">Feature suggestions, UI ideas, source recommendations, and growth ideas are welcome.</span>
+    </div>
+
+    <div class="notice">
+        Expected response window: 24-72 hours depending on workload.
+    </div>
+</div>
+
+<div class="footer-bottom">
+    <span>Copyright &copy; 2026 NewsLens. Made by Anonymous.</span>
+    <span>Auto-updates every 4 hours</span>
+</div>
+
+<script>
+    window.addEventListener('scroll', () => {
+        const nav = document.getElementById('mainNav');
+        const scrollTop = window.scrollY;
+        const docHeight = document.body.scrollHeight - window.innerHeight;
+        document.getElementById('progressBar').style.width = (scrollTop / docHeight * 100) + '%';
+        scrollTop > 30 ? nav.classList.add('scrolled') : nav.classList.remove('scrolled');
+    });
+
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach((entry, i) => {
+            if (entry.isIntersecting) {
+                setTimeout(() => entry.target.classList.add('visible'), i * 100);
+                observer.unobserve(entry.target);
+            }
+        });
+    }, { threshold: 0.15 });
+
+    document.querySelectorAll('.contact-item').forEach(el => observer.observe(el));
+</script>
+
+</body>
+</html>
