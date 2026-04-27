@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NewsLens - Database Stack</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body { min-height: 100vh; line-height: 1.6; }
+
+        .nav {
+            position: sticky;
+            top: 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 24px 48px;
+            z-index: 100;
+        }
+
+        .nav-logo {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            text-decoration: none;
+        }
+
+        .nav-logo-text {
+            font-size: 19px;
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+
+        .nav-logo-text span { font-weight: 400; }
+
+        .nav-links {
+            display: flex;
+            gap: 28px;
+            align-items: center;
+        }
+
+        .nav-links a {
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .footer {
+            padding: 48px;
+            border-top: 1px solid rgba(0, 0, 0, 0.08);
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 28px;
+        }
+
+        .footer-col h4 {
+            font-size: 12px;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+            margin-bottom: 14px;
+        }
+
+        .footer-col a,
+        .footer-col p {
+            display: block;
+            font-size: 14px;
+            line-height: 1.7;
+            text-decoration: none;
+            margin-bottom: 8px;
+        }
+
+        .footer-bottom {
+            padding: 20px 48px 42px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 16px;
+            font-size: 13px;
+        }
+
+        .footer-links {
+            display: flex;
+            gap: 22px;
+            flex-wrap: wrap;
+        }
+
+        @media (max-width: 860px) {
+            .nav {
+                padding: 20px 24px;
+                align-items: flex-start;
+                flex-direction: column;
+                gap: 18px;
+            }
+
+            .nav-links {
+                gap: 16px;
+                flex-wrap: wrap;
+            }
+
+            .footer {
+                padding: 36px 24px;
+                grid-template-columns: 1fr;
+            }
+
+            .footer-bottom {
+                padding: 20px 24px 36px;
+                flex-direction: column;
+                align-items: flex-start;
+            }
+        }
+    </style>
+    <link rel="stylesheet" href="/theme.css">
+</head>
+<body class="page-database">
+<nav class="nav" id="mainNav">
+    <a class="nav-logo" href="/home">
+        <span class="nav-logo-text">NEWSL<span>E</span>NS</span>
+    </a>
+    <div class="nav-links">
+        <a href="/home">Home</a>
+        <a href="/briefs">Briefs</a>
+        <a href="/analytics">Analytics</a>
+        <a href="/contact">Contact</a>
+    </div>
+</nav>
+
+<main class="db-page">
+    <section class="db-hero">
+        <div class="db-eyebrow">Database architecture</div>
+        <h1 class="db-title">Choose one database<br><em>built to grow.</em></h1>
+        <p class="db-subtitle">NewsLens stores articles, summaries, users, votes, comments, backups, and scheduled ingest output. That shape wants PostgreSQL, not a single SQLite file locked to one machine.</p>
+        <div class="db-hero-actions">
+            <a href="/briefs" class="btn-create-account" style="padding: 12px 24px; font-size: 15px; text-decoration: none;">Open the product</a>
+            <a href="/home" class="btn-signin" style="border: 1px solid rgba(0,0,0,0.12); padding: 12px 24px; border-radius: 999px; text-decoration: none;">Back to homepage</a>
+        </div>
+        <div class="db-hero-stats">
+            <div>
+                <div class="db-stat-label">Primary engine</div>
+                <div class="db-stat-value">Postgres</div>
+            </div>
+            <div>
+                <div class="db-stat-label">Recommended host</div>
+                <div class="db-stat-value">Neon</div>
+            </div>
+            <div>
+                <div class="db-stat-label">Connection shape</div>
+                <div class="db-stat-value">1 URL</div>
+            </div>
+            <div>
+                <div class="db-stat-label">Data domains</div>
+                <div class="db-stat-value">7+</div>
+            </div>
+        </div>
+    </section>
+
+    <section class="db-section">
+        <div class="db-grid">
+            <article class="db-card db-span-7">
+                <div class="db-rec-badge">Recommended stack: Neon + PostgreSQL</div>
+                <h2>Neon is the best fit for NewsLens right now.</h2>
+                <p>NewsLens has a clearly relational shape: articles connect to summaries, summaries connect to votes and comments, users connect to actions, and backups need durable storage. Neon gives us managed Postgres with the lowest operational overhead for a project that grows in bursts through ingestion runs and reader traffic spikes.</p>
+                <ul>
+                    <li>It keeps the database fully Postgres, so the app stays portable and standard.</li>
+                    <li>Autoscaling matches the bursty load pattern of scheduled RSS ingestion plus reader traffic.</li>
+                    <li>Branching is especially useful when we need to test schema changes without touching production data.</li>
+                    <li>It already speaks the connection-string pattern this Flask app wants through <code>DATABASE_URL</code>.</li>
+                </ul>
+                <div class="db-chip-row">
+                    <span class="db-chip">Relational data</span>
+                    <span class="db-chip">Scheduled writes</span>
+                    <span class="db-chip">Low ops burden</span>
+                    <span class="db-chip">Future analytics ready</span>
+                </div>
+            </article>
+
+            <article class="db-card db-span-5">
+                <h2>Why move off SQLite now.</h2>
+                <p>SQLite is great for local development, but NewsLens is already beyond the sweet spot for a single file database. We have periodic ingestion, many tables, admin exports, votes, comments, and backups all touching the same store. That is exactly where a managed Postgres setup becomes the safer long-term choice.</p>
+                <ul>
+                    <li>Concurrent reads and writes are more reliable under real traffic.</li>
+                    <li>Backups, restores, and observability are handled at the provider layer.</li>
+                    <li>We can grow into reporting, search, and heavier analytics without changing database families again.</li>
+                </ul>
+            </article>
+
+            <article class="db-card db-span-12">
+                <h2>Provider page, organized in one place.</h2>
+                <p>Neon is the recommendation, but here is the clean comparison for the stack we are building.</p>
+                <div class="db-provider-list">
+                    <div class="db-provider">
+                        <div class="db-provider-top">
+                            <strong>Neon</strong>
+                            <small>Best fit</small>
+                        </div>
+                        <p>Use this when you want managed serverless Postgres, branching for safer schema changes, autoscaling, pooled connections, and the least infrastructure overhead.</p>
+                        <div class="db-chip-row">
+                            <span class="db-chip">Autoscaling</span>
+                            <span class="db-chip">Branching</span>
+                            <span class="db-chip">Read replicas</span>
+                        </div>
+                    </div>
+                    <div class="db-provider">
+                        <div class="db-provider-top">
+                            <strong>Supabase</strong>
+                            <small>Strong alternative</small>
+                        </div>
+                        <p>Choose this if you also want built-in auth, storage, and a broader backend platform around Postgres. It is a bigger platform than we need today, but still a solid option.</p>
+                        <div class="db-chip-row">
+                            <span class="db-chip">Postgres core</span>
+                            <span class="db-chip">Backups</span>
+                            <span class="db-chip">Auth + storage</span>
+                        </div>
+                    </div>
+                    <div class="db-provider">
+                        <div class="db-provider-top">
+                            <strong>Railway</strong>
+                            <small>Simple deployment path</small>
+                        </div>
+                        <p>Choose this if you want the app and the database living in the same deployment platform with very fast setup. It is easy, but less database-specialized than Neon.</p>
+                        <div class="db-chip-row">
+                            <span class="db-chip">Fast setup</span>
+                            <span class="db-chip">DATABASE_URL</span>
+                            <span class="db-chip">Good for small teams</span>
+                        </div>
+                    </div>
+                </div>
+            </article>
+
+            <article class="db-card db-span-6">
+                <h2>How our data fits Postgres.</h2>
+                <p>This project already has multiple related entities. Postgres gives us the right foundation without giving up the simple table model we already use.</p>
+                <div class="db-schema-grid">
+                    <div class="db-schema-item">
+                        <strong>Content layer</strong>
+                        <p>Articles, summaries, headlines, source links, thumbnails, and publication timestamps.</p>
+                    </div>
+                    <div class="db-schema-item">
+                        <strong>User layer</strong>
+                        <p>Google-auth users, votes, comments, rate limits, and session-related data.</p>
+                    </div>
+                    <div class="db-schema-item">
+                        <strong>Ops layer</strong>
+                        <p>Backups, import scripts, exports, and future pipeline run logs.</p>
+                    </div>
+                    <div class="db-schema-item">
+                        <strong>Growth layer</strong>
+                        <p>Analytics, search indexes, category drilldowns, and possible vector features later.</p>
+                    </div>
+                </div>
+            </article>
+
+            <article class="db-snippet db-span-6">
+                <h2>Connection shape in the app.</h2>
+                <pre><code>DATABASE_URL = os.getenv("DATABASE_URL")
+
+# Example
+DATABASE_URL=postgresql://user:password@host:5432/newslens</code></pre>
+                <div class="db-note">
+                    The backend now supports PostgreSQL through <code>DATABASE_URL</code> and keeps SQLite as a local fallback, so we can move production cleanly without breaking day-to-day development.
+                </div>
+            </article>
+
+            <article class="db-card db-span-12">
+                <h2>Migration checklist.</h2>
+                <p>This is the cleanest path from the current SQLite setup to the new hosted Postgres stack.</p>
+                <div class="db-steps">
+                    <div class="db-step">
+                        <div class="db-step-num">01</div>
+                        <strong>Create the hosted Postgres database.</strong>
+                        <p>Spin up a Neon Postgres project, create the production database, and copy the provider connection string.</p>
+                    </div>
+                    <div class="db-step">
+                        <div class="db-step-num">02</div>
+                        <strong>Set <code>DATABASE_URL</code>.</strong>
+                        <p>Add the Postgres connection string to the server environment so Flask and the scheduler both point at the same hosted database.</p>
+                    </div>
+                    <div class="db-step">
+                        <div class="db-step-num">03</div>
+                        <strong>Run the migration script.</strong>
+                        <p>Use <code>python backend/migrate_sqlite_to_postgres.py</code> to copy current SQLite data into Postgres before cutover.</p>
+                    </div>
+                    <div class="db-step">
+                        <div class="db-step-num">04</div>
+                        <strong>Verify writes from the pipeline.</strong>
+                        <p>Trigger one ingest run, check article and summary counts, then verify votes, comments, and admin export still work.</p>
+                    </div>
+                </div>
+            </article>
+        </div>
+    </section>
+</main>
+
+<footer class="footer">
+    <div class="footer-col">
+        <h4>Recommendation</h4>
+        <p>Primary production choice: Neon-hosted PostgreSQL.</p>
+        <p>Keep SQLite only as a local fallback, not as the deployed source of truth.</p>
+    </div>
+    <div class="footer-col">
+        <h4>Product</h4>
+        <a href="/home">Homepage</a>
+        <a href="/briefs">Briefs feed</a>
+        <a href="/analytics">Analytics</a>
+        <a href="/contact">Contact</a>
+    </div>
+    <div class="footer-col">
+        <h4>Migration</h4>
+        <p><code>DATABASE_URL</code> for runtime.</p>
+        <p><code>python backend/migrate_sqlite_to_postgres.py</code> for data copy.</p>
+    </div>
+</footer>
+
+<div class="footer-bottom">
+    <span>NewsLens database architecture page.</span>
+    <div class="footer-links">
+        <a href="/home">Return to NewsLens</a>
+        <a href="/briefs">Read the briefs</a>
+    </div>
+</div>
+</body>
+</html>

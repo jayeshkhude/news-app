@@ -1,0 +1,10 @@
+flask
+flask-cors
+feedparser
+requests
+anthropic
+apscheduler
+scikit-learn
+groq
+google-auth
+psycopg[binary]

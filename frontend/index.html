@@ -1,0 +1,1202 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NewsLens</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { 
+            font-family: 'Inter', sans-serif; background-color: #f9f8f6; color: #1a1a1a; font-size: 16px; line-height: 1.6; 
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200' viewBox='0 0 100 100'%3E%3Cg stroke='rgba(0,0,0,0.04)' stroke-width='0.4' fill='none'%3E%3Cpath d='M0 20 Q 30 50, 100 10' /%3E%3Cpath d='M10 100 Q 50 30, 90 0' /%3E%3Cpath d='M0 60 Q 40 80, 100 50' /%3E%3Cpath d='M20 0 Q 70 50, 30 100' /%3E%3Cpath d='M0 80 Q 50 100, 100 70' /%3E%3Cpath d='M80 0 Q 100 50, 70 100' /%3E%3C/g%3E%3C/svg%3E");
+            background-attachment: fixed;
+            animation: bgDrift 60s linear infinite;
+        }
+        @keyframes bgDrift {
+            0% { background-position: 0 0; }
+            100% { background-position: -400px 400px; }
+        }
+ 
+        #progressBar {
+            position: fixed; top: 0; left: 0;
+            height: 3px; background: #1a1a1a; width: 0%;
+            z-index: 9999; transition: width 0.1s linear;
+        }
+ 
+        .nav {
+            position: sticky; top: 0;
+            background: #f9f8f6;
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 24px 48px;
+            border-bottom: 1px solid rgba(0,0,0,0.08);
+            z-index: 100;
+            transition: padding 0.3s ease;
+        }
+        .nav.scrolled { padding: 16px 48px; }
+        .nav-logo { display: flex; align-items: center; gap: 8px; text-decoration: none; }
+        .nav-logo-text { 
+            font-size: 19px; letter-spacing: 0.1em; font-weight: 700; color: #1a1a1a; 
+            font-family: monospace; text-transform: uppercase;
+        }
+        .nav-logo-text span { font-weight: 400; }
+        
+        .nav-links { display: flex; gap: 28px; align-items: center; position: absolute; left: 50%; transform: translateX(-50%); }
+        .nav-links a {
+            font-size: 14px; font-weight: 500; color: #4b5563; text-decoration: none; 
+            transition: color 0.2s;
+        }
+        .nav-links a:hover { color: #1a1a1a; }
+        
+        .nav-right { display: flex; align-items: center; gap: 16px; }
+        .btn-signin { font-size: 14px; font-weight: 500; color: #4b5563; text-decoration: none; transition: color 0.2s; }
+        .btn-signin:hover { color: #1a1a1a; }
+        .btn-create-account {
+            background: #1a1a1a; color: #fff; border: none; border-radius: 20px;
+            padding: 8px 18px; font-size: 13px; font-weight: 600; cursor: pointer; transition: background 0.2s;
+            text-decoration: none;
+        }
+        .btn-create-account:hover { background: #333; }
+
+        /* Burger Menu & Mobile Nav Drawer */
+        .burger-btn { 
+            display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 5px;
+            width: 32px; height: 32px; background: none; border: none; cursor: pointer; z-index: 1001; 
+        }
+        .burger-btn span {
+            display: block; width: 24px; height: 2px; background: #111; border-radius: 2px;
+            transition: transform 0.3s ease, opacity 0.3s ease;
+        }
+        .burger-btn.open span:nth-child(1) { transform: translateY(7px) rotate(45deg); }
+        .burger-btn.open span:nth-child(2) { opacity: 0; }
+        .burger-btn.open span:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
+        .mobile-nav-overlay {
+            position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.5); z-index: 999;
+            opacity: 0; pointer-events: none; transition: opacity 0.3s ease;
+        }
+        .mobile-nav-overlay.open { opacity: 1; pointer-events: auto; }
+        
+        .mobile-nav { 
+            position: fixed; top: 0; left: -280px; bottom: 0; width: 280px;
+            background: #fff; padding: 30px 24px; z-index: 1000;
+            display: flex; flex-direction: column; gap: 24px;
+            box-shadow: 4px 0 20px rgba(0,0,0,0.1);
+            transition: left 0.3s ease;
+            overflow-y: auto;
+        }
+        .mobile-nav.open { left: 0; }
+        .mobile-nav .nav-brand { font-size: 20px; font-weight: 800; color: #111; margin-bottom: 12px; }
+        .mobile-nav .close-btn { position: absolute; top: 20px; right: 20px; font-size: 28px; background: none; border: none; cursor: pointer; color: #6b7280; }
+        .mobile-nav a { font-size: 16px; font-weight: 600; color: #374151; text-decoration: none; padding: 8px 0; border-bottom: 1px solid #f3f4f6; }
+        .mobile-nav a:hover { color: #111; }
+        
+        .ag-date-picker {
+            font-family: 'Inter', sans-serif; font-size: 14px; padding: 6px 12px;
+            border: 1px solid rgba(0,0,0,0.15); border-radius: 4px;
+            background: transparent; color: #111; outline: none; cursor: pointer;
+        }
+        .ag-date-picker:focus { border-color: #111; }
+        
+        /* User Profile Dropdown */
+        .user-profile { position: relative; display: flex; align-items: center; gap: 10px; cursor: pointer; }
+        .user-avatar { width: 36px; height: 36px; border-radius: 50%; object-fit: cover; border: 1px solid #e5e7eb; }
+        .user-dropdown {
+            position: absolute; top: 120%; right: 0; background: #fff; border: 1px solid #e5e7eb;
+            border-radius: 12px; padding: 16px; box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            min-width: 200px; display: none; flex-direction: column; gap: 12px; z-index: 200;
+        }
+        .user-dropdown.open { display: flex; }
+        .user-dropdown-name { font-size: 14px; font-weight: 700; color: #111; }
+        .user-dropdown-email { font-size: 12px; color: #6b7280; margin-bottom: 8px; }
+        .user-dropdown hr { border: none; border-top: 1px solid #f3f4f6; margin: 4px 0; }
+        .btn-logout { background: #fef2f2; color: #ef4444; border: 1px solid #fee2e2; padding: 8px 12px; border-radius: 6px; font-size: 13px; font-weight: 600; cursor: pointer; text-align: center; transition: background 0.2s; }
+        .btn-logout:hover { background: #fee2e2; }
+
+        .burger-btn { display: none; }
+        @media (max-width: 900px) {
+            .nav-links { display: none; }
+            .burger-btn { display: flex; }
+        }
+
+        .ticker {
+            position: sticky;
+            top: 74px;
+            z-index: 99;
+            background: linear-gradient(90deg, #ef4444 0%, #991b1b 100%);
+            color: #fff;
+            overflow: hidden;
+        }
+        .ticker-inner {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            padding: 10px 48px;
+            white-space: nowrap;
+        }
+        .ticker-label {
+            font-size: 12px;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            font-weight: 700;
+            flex-shrink: 0;
+        }
+        .ticker-track { overflow: hidden; flex: 1; }
+        .ticker-run {
+            display: inline-block;
+            padding-left: 100%;
+            animation: tickerMove 70s linear infinite;
+            font-size: 14px;
+            font-weight: 500;
+        }
+        @keyframes tickerMove {
+            0% { transform: translateX(0); }
+            100% { transform: translateX(-100%); }
+        }
+        .nav-links a:hover { color: #111; }
+ 
+        .hero-row {
+            display: grid;
+            grid-template-columns: 1fr minmax(260px, 340px);
+            gap: 56px;
+            align-items: center;
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 96px 48px 72px;
+        }
+        .hero-copy { max-width: 620px; }
+        .hero-tag { font-size: 13px; font-weight: 600; letter-spacing: 0.1em; color: #2563eb; text-transform: uppercase; margin-bottom: 24px; }
+        .hero-row h1 {
+            font-size: clamp(36px, 4vw, 56px); font-weight: 800; line-height: 1.05;
+            letter-spacing: -0.03em; margin-bottom: 24px; color: #111;
+            opacity: 0; transform: translateY(20px);
+            animation: fadeUp 0.7s ease forwards 0.1s;
+        }
+        .hero-row p {
+            font-size: 19px; color: #4b5563; line-height: 1.6;
+            max-width: 560px; margin-bottom: 40px;
+            opacity: 0; transform: translateY(20px);
+            animation: fadeUp 0.7s ease forwards 0.25s;
+        }
+        .hero-actions {
+            display: flex; gap: 16px; flex-wrap: wrap;
+            opacity: 0; transform: translateY(20px);
+            animation: fadeUp 0.7s ease forwards 0.4s;
+        }
+        .hero-art {
+            width: 100%;
+            max-width: 340px;
+            margin: 0 auto;
+            opacity: 0;
+            animation: fadeUp 0.8s ease forwards 0.35s;
+        }
+        .hero-art svg { width: 100%; height: auto; display: block; }
+        @media (max-width: 900px) {
+            .hero-row { grid-template-columns: 1fr; padding: 80px 32px 56px; gap: 40px; }
+            .hero-art { order: -1; max-width: 280px; }
+        }
+        @keyframes fadeUp { to { opacity: 1; transform: translateY(0); } }
+ 
+        .btn-primary {
+            font-family: 'Inter', sans-serif; font-size: 15px; font-weight: 600; padding: 14px 28px;
+            background: #111; color: #fff; border: none; cursor: pointer; border-radius: 8px;
+            letter-spacing: 0.02em; text-decoration: none; display: inline-block;
+            transition: background 0.2s, transform 0.15s, box-shadow 0.2s;
+            box-shadow: 0 4px 14px rgba(0,0,0,0.1);
+        }
+        .btn-primary:hover { background: #2563eb; transform: translateY(-2px); box-shadow: 0 6px 20px rgba(37,99,235,0.2); }
+        .btn-primary:active { transform: translateY(0); }
+        .btn-secondary {
+            font-family: 'Inter', sans-serif; font-size: 15px; font-weight: 600; padding: 14px 28px;
+            background: #fff; color: #111; border: 1px solid #d1d5db; cursor: pointer; border-radius: 8px;
+            letter-spacing: 0.02em; text-decoration: none; display: inline-block;
+            transition: border-color 0.2s, transform 0.15s, background 0.2s;
+        }
+        .btn-secondary:hover { border-color: #111; background: #f9fafb; transform: translateY(-2px); }
+
+ 
+        .divider { width: 100%; height: 0.5px; background: #ccc; }
+ 
+        .features { display: grid; grid-template-columns: repeat(3, 1fr); border-bottom: 0.5px solid #ccc; }
+        .feature {
+            padding: 48px; border-right: 0.5px solid #ccc;
+            transition: background 0.2s;
+            opacity: 0; transform: translateY(16px);
+        }
+        .feature.visible { animation: fadeUp 0.5s ease forwards; }
+        .feature:nth-child(2).visible { animation-delay: 0.1s; }
+        .feature:nth-child(3).visible { animation-delay: 0.2s; }
+        .feature:last-child { border-right: none; }
+        .feature:hover { background: #fafafa; }
+        .feature-num { font-size: 12px; color: #999; letter-spacing: 0.1em; margin-bottom: 20px; }
+        .feature h3 { font-size: 16px; font-weight: 700; margin-bottom: 10px; letter-spacing: 0.02em; color: #111; }
+        .feature p { font-size: 16px; color: #444; line-height: 1.7; }
+ 
+        .how { padding: 64px 48px; border-bottom: 0.5px solid #ccc; display: flex; gap: 80px; }
+        .how-label { font-size: 12px; letter-spacing: 0.1em; color: #666; text-transform: uppercase; min-width: 120px; padding-top: 3px; }
+        .how-list { display: flex; flex-direction: column; gap: 16px; }
+        .how-item {
+            font-size: 16px; color: #333; line-height: 1.7;
+            border-left: 1px solid #ccc; padding-left: 20px;
+            transition: border-color 0.2s, color 0.2s;
+            opacity: 0; transform: translateX(-10px);
+        }
+        .how-item.visible { animation: fadeRight 0.5s ease forwards; }
+        .how-item:nth-child(2).visible { animation-delay: 0.1s; }
+        .how-item:nth-child(3).visible { animation-delay: 0.2s; }
+        .how-item:nth-child(4).visible { animation-delay: 0.3s; }
+        .how-item:hover { border-color: #111; color: #111; }
+        @keyframes fadeRight { to { opacity: 1; transform: translateX(0); } }
+ 
+        .search-section { padding: 64px 48px; border-bottom: 1px solid #e5e7eb; background: #fff; }
+        .search-row {
+            display: flex; gap: 0; max-width: 600px; border: 1px solid #d1d5db; border-radius: 8px; overflow: hidden;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+        .search-row:focus-within { border-color: #2563eb; box-shadow: 0 0 0 3px rgba(37,99,235,0.1); }
+        .search-row input {
+            flex: 1; padding: 16px 20px; border: none; outline: none;
+            font-family: 'Inter', sans-serif; font-size: 16px; color: #111; background: #fff;
+        }
+        .search-row button {
+            padding: 16px 28px; background: #111; color: #fff; border: none; cursor: pointer;
+            font-family: 'Inter', sans-serif; font-size: 15px; font-weight: 600; letter-spacing: 0.02em;
+            transition: background 0.2s;
+        }
+        .search-row button:hover { background: #2563eb; }
+ 
+        .section-label {
+            font-size: 13px; font-weight: 700; letter-spacing: 0.1em; color: #6b7280;
+            text-transform: uppercase; margin-bottom: 36px;
+            opacity: 0;
+        }
+        .section-label.visible { animation: fadeUp 0.4s ease forwards; }
+ 
+        .news-section { padding: 80px 48px; }
+        .cards-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 24px; }
+        .card {
+            padding: 32px; border: 1px solid #e5e7eb; border-radius: 12px; background: #fff;
+            cursor: pointer; transition: transform 0.2s, box-shadow 0.2s, border-color 0.2s;
+            opacity: 0; transform: translateY(16px);
+            box-shadow: 0 4px 6px rgba(0,0,0,0.02);
+            display: flex; flex-direction: column;
+        }
+        .card.visible { animation: fadeUp 0.4s ease forwards; }
+        .card:hover { transform: translateY(-4px); box-shadow: 0 12px 24px rgba(0,0,0,0.06); border-color: #d1d5db; z-index: 1; }
+        .card h3 { font-size: 20px; font-weight: 700; margin-bottom: 14px; line-height: 1.4; color: #111; letter-spacing: -0.01em; }
+        .card p { font-size: 16px; color: #4b5563; line-height: 1.6; margin-bottom: 24px; display: -webkit-box; -webkit-line-clamp: 4; line-clamp: 4; -webkit-box-orient: vertical; overflow: hidden; flex: 1; }
+        .card-meta { display: flex; justify-content: space-between; align-items: center; }
+        .card-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; gap: 8px; }
+        .cat-pill { font-size: 12px; font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase; border: 1px solid #e5e7eb; color: #2563eb; padding: 4px 10px; border-radius: 6px; }
+        .read-pill { font-size: 12px; font-weight: 500; letter-spacing: 0.02em; color: #15803d; background: #dcfce7; padding: 4px 10px; border-radius: 6px; }
+        .vote-strip { display: flex; gap: 8px; align-items: center; margin-top: 20px; padding-top: 16px; border-top: 1px solid #f3f4f6; }
+        .vote-btn {
+            border: 1px solid #d1d5db; background: #fff; padding: 6px 12px; cursor: pointer; border-radius: 6px;
+            font-family: 'Inter', sans-serif; font-size: 13px; font-weight: 500; color: #4b5563; transition: all 0.2s;
+        }
+        .vote-btn:hover { background: #f3f4f6; color: #111; }
+        .vote-btn.active { border-color: #2563eb; background: #2563eb; color: #fff; }
+        .sources-count { font-size: 13px; font-weight: 500; color: #6b7280; }
+        .card-time { font-size: 13px; color: #9ca3af; }
+
+        .archive-section { padding: 64px 48px; border-top: 1px solid #e5e7eb; background: #fff; }
+        .archive-row {
+            display: flex; gap: 0; max-width: 400px; border: 1px solid #d1d5db; margin-bottom: 32px; border-radius: 8px; overflow: hidden;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+        .archive-row:focus-within { border-color: #2563eb; box-shadow: 0 0 0 3px rgba(37,99,235,0.1); }
+        .archive-row input {
+            flex: 1; padding: 16px 20px; border: none; outline: none;
+            font-family: 'Inter', sans-serif; font-size: 16px; color: #111; background: #fff;
+        }
+        .archive-row button {
+            padding: 16px 28px; background: #111; color: #fff; border: none; cursor: pointer;
+            font-family: 'Inter', sans-serif; font-size: 15px; font-weight: 600; letter-spacing: 0.02em;
+            transition: background 0.2s;
+        }
+        .archive-row button:hover { background: #2563eb; }
+        #archiveResults .cards-grid { margin-top: 20px; }
+ 
+        .modal-overlay {
+            display: none; position: fixed; top: 0; left: 0;
+            width: 100%; height: 100%; background: rgba(0,0,0,0.5);
+            z-index: 1000; justify-content: center; align-items: flex-start;
+            padding: 60px 20px; overflow-y: auto;
+            opacity: 0; transition: opacity 0.2s;
+        }
+        .modal-overlay.active { display: flex; opacity: 1; }
+        .modal {
+            background: #fff; padding: 48px; max-width: 680px; width: 100%;
+            position: relative; border: 0.5px solid #ccc;
+            transform: translateY(20px); transition: transform 0.25s ease;
+        }
+        .modal-overlay.active .modal { transform: translateY(0); }
+        .modal-close {
+            position: absolute; top: 20px; right: 24px; font-size: 18px;
+            cursor: pointer; color: #666; font-family: 'Courier New', monospace;
+            transition: color 0.15s, transform 0.2s;
+        }
+        .modal-close:hover { color: #111; transform: rotate(90deg); }
+        .modal h2 { font-size: 19px; font-weight: 700; margin-bottom: 20px; line-height: 1.45; padding-right: 30px; color: #111; }
+        .modal .summary { font-size: 17px; line-height: 1.9; color: #333; margin-bottom: 32px; }
+        .modal-label { font-size: 12px; letter-spacing: 0.1em; color: #666; text-transform: uppercase; margin-bottom: 12px; }
+        .source-chips { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 24px; }
+        .source-chip {
+            font-size: 13px; color: #333; border: 0.5px solid #bbb; padding: 6px 14px;
+            letter-spacing: 0.04em; transition: border-color 0.15s, color 0.15s; cursor: default;
+        }
+        .source-chip:hover { border-color: #111; color: #111; }
+        .links-list { display: flex; flex-direction: column; gap: 10px; }
+        .links-list a { font-size: 16px; color: #111; text-decoration: underline; text-underline-offset: 3px; transition: opacity 0.15s; }
+        .links-list a:hover { opacity: 0.6; }
+ 
+        .custom-prompt-box { margin-bottom: 24px; border-top: 1px solid #f3f4f6; padding-top: 20px; }
+        .prompt-toggle-btn {
+            background: rgba(37, 99, 235, 0.05); border: 1px solid rgba(37, 99, 235, 0.15); border-radius: 12px; 
+            padding: 14px 16px; width: 100%; display: flex; justify-content: space-between; align-items: center;
+            font-size: 14px; font-weight: 600; color: #2563eb; cursor: pointer; transition: all 0.2s;
+        }
+        .prompt-toggle-btn::after { content: "✨"; font-size: 16px; }
+        .prompt-toggle-btn:hover { background: rgba(37, 99, 235, 0.1); transform: translateY(-1px); }
+        .prompt-input-area { margin-top: 12px; display: none; background: #fff; padding: 16px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.05); border: 1px solid #f3f4f6; }
+        .prompt-input-area textarea {
+            width: 100%; height: 70px; resize: none; border: 1px solid #e5e7eb; border-radius: 8px;
+            padding: 10px; font-family: inherit; font-size: 13px; color: #111; background: #f9fafb;
+            transition: border 0.2s; outline: none;
+        }
+        .prompt-input-area textarea:focus { border-color: #2563eb; background: #fff; box-shadow: 0 0 0 3px rgba(37,99,235,0.1); }
+        .prompt-actions { display: flex; justify-content: space-between; align-items: center; margin-top: 12px; }
+        .prompt-hint { font-size: 12px; color: #6b7280; font-weight: 500; }
+        .prompt-submit {
+            background: #2563eb; color: #fff; border: none; padding: 8px 16px; border-radius: 8px;
+            font-size: 13px; font-weight: 700; cursor: pointer; transition: background 0.2s, transform 0.2s;
+            box-shadow: 0 4px 12px rgba(37,99,235,0.2);
+        }
+        .prompt-submit:hover { background: #1d4ed8; transform: translateY(-1px); }
+ 
+        .footer {
+            padding: 48px; border-top: 0.5px solid #ccc;
+            display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 32px;
+        }
+        .footer-col h4 { font-size: 12px; letter-spacing: 0.1em; text-transform: uppercase; color: #999; margin-bottom: 16px; }
+        .footer-col a, .footer-col p { font-size: 14px; color: #555; text-decoration: none; display: block; margin-bottom: 8px; line-height: 1.6; transition: color 0.15s; }
+        .footer-col a:hover { color: #111; }
+        .footer-bottom {
+            padding: 20px 48px; border-top: 0.5px solid #eee;
+            display: flex; justify-content: space-between; align-items: center;
+        }
+        .footer-bottom p { font-size: 13px; color: #888; letter-spacing: 0.04em; }
+        .footer-bottom a { font-size: 13px; color: #888; text-decoration: none; letter-spacing: 0.04em; transition: color 0.15s; }
+        .footer-bottom a:hover { color: #111; }
+        .back-to-top {
+            font-size: 13px; color: #888; cursor: pointer; letter-spacing: 0.06em;
+            text-transform: uppercase; background: none; border: none;
+            font-family: 'Courier New', monospace; transition: color 0.15s, transform 0.2s;
+        }
+        .back-to-top:hover { color: #111; transform: translateY(-2px); }
+ 
+        .loading { padding: 48px; font-size: 16px; color: #666; letter-spacing: 0.04em; display: flex; align-items: center; gap: 10px; }
+        .loading-dots { display: flex; gap: 4px; align-items: center; }
+        .loading-dots span {
+            display: inline-block; width: 6px; height: 6px;
+            background: #ccc; border-radius: 50%; 
+            animation: dotPulse 1.2s ease-in-out infinite;
+        }
+        .loading-dots span:nth-child(2) { animation-delay: 0.2s; }
+        .loading-dots span:nth-child(3) { animation-delay: 0.4s; }
+        @keyframes dotPulse {
+            0%,80%,100% { transform: scale(0.6); background: #ccc; }
+            40% { transform: scale(1); background: #111; }
+        }
+        .no-results { padding: 48px; font-size: 16px; color: #888; }
+ 
+        .terms-overlay {
+            display: none; position: fixed; top: 0; left: 0;
+            width: 100%; height: 100%; background: rgba(0,0,0,0.5);
+            z-index: 2000; justify-content: center; align-items: flex-start;
+            padding: 60px 20px; overflow-y: auto;
+        }
+        .terms-overlay.active { display: flex; }
+        .terms-modal {
+            background: #fff; padding: 48px; max-width: 680px; width: 100%;
+            position: relative; border: 0.5px solid #ccc;
+        }
+        .terms-modal h2 { font-size: 19px; font-weight: 700; margin-bottom: 24px; letter-spacing: 0.04em; }
+        .terms-modal h3 { font-size: 15px; font-weight: 700; margin: 20px 0 8px; letter-spacing: 0.04em; }
+        .terms-modal p { font-size: 16px; color: #444; line-height: 1.75; margin-bottom: 12px; }
+        .terms-close { position: absolute; top: 20px; right: 24px; font-size: 18px; cursor: pointer; color: #666; transition: color 0.15s, transform 0.2s; }
+        .terms-close:hover { color: #111; transform: rotate(90deg); }
+        /* AG Hero */
+        .ag-hero {
+            max-width: 800px; margin: 0 auto; padding: 120px 24px 80px; text-align: center;
+        }
+        .ag-hero-badge {
+            display: inline-flex; align-items: center; gap: 8px; font-size: 11px;
+            font-weight: 700; letter-spacing: 0.15em; color: #666; margin-bottom: 24px;
+        }
+        .ag-dot { width: 6px; height: 6px; background: #d9534f; border-radius: 50%; }
+        .ag-hero-title {
+            font-size: clamp(48px, 6vw, 64px); font-weight: 400; font-family: 'Times New Roman', serif;
+            letter-spacing: -0.02em; color: #1a1a1a; margin-bottom: 24px; line-height: 1.1;
+        }
+        .ag-hero-title em { font-style: italic; }
+        .ag-hero-subtitle {
+            font-size: 18px; color: #444; line-height: 1.6; max-width: 600px; margin: 0 auto 48px;
+        }
+        .ag-search-container { max-width: 640px; margin: 0 auto; position: relative; }
+        .ag-search-box {
+            display: flex; align-items: center; background: transparent; border: 1px solid rgba(0,0,0,0.15);
+            border-radius: 40px; padding: 6px 6px 6px 20px; transition: border-color 0.2s;
+        }
+        .ag-search-box:focus-within { border-color: #1a1a1a; }
+        .ag-search-icon { color: #888; margin-right: 12px; }
+        .ag-search-box input {
+            flex: 1; border: none; background: transparent; font-family: 'Inter', sans-serif;
+            font-size: 16px; color: #1a1a1a; outline: none; padding: 8px 0;
+        }
+        .ag-ask-btn {
+            background: #888; color: #fff; border: none; border-radius: 30px;
+            padding: 10px 24px; font-size: 14px; font-weight: 600; cursor: pointer; transition: background 0.2s;
+        }
+        .ag-ask-btn:hover { background: #666; }
+        .ag-level-toggle {
+            display: flex; justify-content: center; align-items: center; gap: 8px; margin-top: 24px;
+        }
+        .ag-level-label { font-size: 10px; font-weight: 700; letter-spacing: 0.15em; color: #888; margin-right: 8px; }
+        .ag-level-btn {
+            background: transparent; border: 1px solid rgba(0,0,0,0.1); border-radius: 20px;
+            padding: 6px 16px; font-size: 12px; font-weight: 500; color: #666; cursor: pointer; transition: all 0.2s;
+        }
+        .ag-level-btn:hover { border-color: #1a1a1a; color: #1a1a1a; }
+        .ag-level-btn.active { background: #1a1a1a; color: #fff; border-color: #1a1a1a; }
+        .ag-free-plan {
+            display: inline-block; margin-top: 24px; font-size: 10px; font-weight: 700;
+            letter-spacing: 0.1em; color: #888; border: 1px solid rgba(0,0,0,0.1);
+            border-radius: 20px; padding: 8px 20px;
+        }
+
+        /* AG Stats */
+        .ag-stats-container {
+            display: grid; grid-template-columns: repeat(4, 1fr); max-width: 1000px; margin: 0 auto 80px;
+            text-align: center; gap: 24px; padding: 0 24px;
+        }
+        .ag-stat-num { font-size: 40px; font-weight: 400; font-family: 'Times New Roman', serif; color: #1a1a1a; margin-bottom: 8px; }
+        .ag-stat-label { font-size: 11px; font-weight: 600; letter-spacing: 0.15em; color: #666; text-transform: uppercase; }
+        @media(max-width: 768px) { .ag-stats-container { grid-template-columns: repeat(2, 1fr); gap: 40px; } }
+
+        /* AG Sections */
+        .ag-section {
+            max-width: 1000px; margin: 0 auto 100px; padding: 0 24px;
+        }
+        .ag-section-header {
+            font-size: 11px; font-weight: 700; letter-spacing: 0.15em; color: #666; margin-bottom: 16px;
+        }
+        .ag-section-title {
+            font-size: 36px; font-weight: 400; font-family: 'Times New Roman', serif; color: #1a1a1a; margin-bottom: 16px;
+        }
+        .ag-section-desc {
+            font-size: 16px; color: #444; line-height: 1.6; max-width: 600px; margin-bottom: 40px;
+        }
+        .ag-link-arrow {
+            font-size: 13px; font-family: monospace; color: #1a1a1a; text-decoration: none; display: inline-flex; align-items: center; gap: 4px;
+        }
+        .ag-link-arrow:hover { text-decoration: underline; }
+
+        /* Featured Card */
+        .ag-featured-card {
+            background: transparent; border: 1px solid rgba(0,0,0,0.1); border-radius: 8px; padding: 32px;
+        }
+        .ag-cat-dot { display: inline-flex; align-items: center; gap: 8px; font-size: 11px; font-weight: 700; letter-spacing: 0.1em; color: #1a1a1a; margin-bottom: 16px; }
+        .ag-cat-dot::before { content: ""; display: block; width: 6px; height: 6px; background: #d9534f; border-radius: 50%; }
+        .ag-feat-title { font-size: 28px; font-weight: 700; color: #1a1a1a; margin-bottom: 12px; }
+        .ag-feat-authors { font-size: 14px; color: #666; margin-bottom: 24px; }
+        .ag-feat-highlights {
+            background: rgba(217, 83, 79, 0.05); border: 1px solid rgba(217, 83, 79, 0.2); border-radius: 8px; padding: 24px;
+        }
+        .ag-feat-highlights-label {
+            font-size: 10px; font-weight: 700; letter-spacing: 0.15em; color: #1a1a1a; margin-bottom: 12px; display: block;
+        }
+        .ag-feat-highlights-text { font-size: 15px; color: #333; line-height: 1.7; }
+        .ag-feat-footer { display: flex; justify-content: space-between; margin-top: 24px; font-size: 12px; font-family: monospace; color: #888; }
+
+        /* Trending Grid */
+        .ag-trending-grid {
+            display: grid; grid-template-columns: 1fr 1fr; gap: 24px;
+        }
+        @media(max-width: 768px) { .ag-trending-grid { grid-template-columns: 1fr; } }
+        .ag-trending-card {
+            background: transparent; border: 1px solid rgba(0,0,0,0.1); border-radius: 8px; padding: 24px;
+            display: flex; flex-direction: column; justify-content: space-between; min-height: 160px;
+            transition: background 0.2s; cursor: pointer; text-decoration: none;
+        }
+        .ag-trending-card:hover { background: rgba(0,0,0,0.02); }
+        .ag-trending-title { font-size: 18px; font-weight: 400; font-family: 'Times New Roman', serif; color: #1a1a1a; line-height: 1.4; margin-bottom: 24px; }
+        .ag-trending-footer {
+            display: flex; justify-content: space-between; align-items: center; border-top: 1px solid rgba(0,0,0,0.1); padding-top: 16px;
+        }
+        .ag-trending-views { font-size: 11px; font-family: monospace; color: #888; letter-spacing: 0.05em; }
+        .ag-trending-link { font-size: 12px; font-family: monospace; color: #444; }
+
+        /* Recent List */
+        .ag-recent-list { border-top: 1px solid rgba(0,0,0,0.1); }
+        .ag-recent-item {
+            padding: 24px 0; border-bottom: 1px solid rgba(0,0,0,0.1); display: flex; justify-content: space-between; align-items: center; cursor: pointer; transition: background 0.2s; text-decoration: none;
+        }
+        .ag-recent-item:hover { background: rgba(0,0,0,0.02); }
+        .ag-recent-meta { font-size: 12px; font-family: monospace; color: #888; margin-bottom: 8px; }
+        .ag-recent-title { font-size: 18px; font-weight: 600; color: #1a1a1a; margin-bottom: 8px; }
+        .ag-recent-authors { font-size: 13px; color: #666; }
+        .ag-recent-arrow { color: #888; font-size: 18px; }
+    </style>
+    <link rel="stylesheet" href="/theme.css">
+</head>
+<body class="page-home">
+ 
+<div id="progressBar"></div>
+ 
+<nav class="nav" id="mainNav">
+    <a href="/" class="nav-logo">
+        <span class="nav-logo-text">NEWSL<span>E</span>NS</span>
+    </a>
+    <div class="nav-links">
+        <a href="/briefs">Briefs</a>
+        <a href="/analytics">Analytics</a>
+        <a href="/database.html">Database</a>
+        <a href="/overlord">Admin</a>
+        <a href="#archive" onclick="document.getElementById('archive').scrollIntoView({behavior:'smooth'}); return false;">Archive ↗</a>
+        <a href="/contact">Contact</a>
+    </div>
+    <div class="nav-right">
+        <a href="#" id="authBtn" class="btn-signin" onclick="startGoogleLogin();return false;">Sign in</a>
+        <a href="#" class="btn-create-account" onclick="startGoogleLogin();return false;" id="createAccBtn">Create account</a>
+        
+        <div class="user-profile" id="userProfile" style="display:none;" onclick="toggleUserMenu()">
+            <img class="user-avatar" id="userAvatar" src="" alt="User" />
+            <div class="user-dropdown" id="userDropdown">
+                <div class="user-dropdown-name" id="userName"></div>
+                <div class="user-dropdown-email" id="userEmail"></div>
+                <hr>
+                <div class="btn-logout" onclick="logoutUser(event)">Sign Out</div>
+            </div>
+        </div>
+        <button class="burger-btn" id="burgerBtn" onclick="toggleMobileMenu()">
+            <span></span>
+            <span></span>
+            <span></span>
+        </button>
+    </div>
+</nav>
+
+<div class="mobile-nav-overlay" id="mobileNavOverlay" onclick="toggleMobileMenu()"></div>
+<div class="mobile-nav" id="mobileNav">
+    <button class="close-btn" onclick="toggleMobileMenu()">&times;</button>
+    <div class="nav-brand">Menu</div>
+    <a href="/briefs">Briefs</a>
+    <a href="/analytics">Analytics</a>
+    <a href="/database.html">Database</a>
+    <a href="/overlord">Admin</a>
+    <a href="#archive" onclick="document.getElementById('archive').scrollIntoView({behavior:'smooth'}); toggleMobileMenu(); return false;">Archive</a>
+    <a href="/contact">Contact</a>
+    <div class="mobile-auth" id="mobileAuthGroup">
+        <a href="#" class="mobile-cta" onclick="startGoogleLogin(); toggleMobileMenu(); return false;">Sign in</a>
+        <a href="#" class="mobile-cta mobile-cta-primary" onclick="startGoogleLogin(); toggleMobileMenu(); return false;">Create account</a>
+    </div>
+</div>
+
+<div class="ticker" id="ticker" style="display:none;">
+    <div class="ticker-inner">
+        <span class="ticker-label">Latest</span>
+        <div class="ticker-track">
+            <div class="ticker-run" id="tickerRun">Loading…</div>
+        </div>
+    </div>
+</div>
+ 
+<div class="ag-hero">
+    <div class="ag-hero-badge"><span class="ag-dot"></span> INDEPENDENT &middot; MULTI-SOURCE &middot; UPDATED DAILY</div>
+    <h1 class="ag-hero-title">Watch the story<br><em>take shape.</em></h1>
+    <p class="ag-hero-subtitle">NewsLens follows a breaking topic across multiple publishers, clusters the signal, and turns the noise into a brief you can actually use.<br>Quick enough for the scroll. Deep enough for the second read.</p>
+    <div style="margin-top: 32px; display: flex; justify-content: center; gap: 16px;">
+        <a href="/briefs" class="btn-create-account" style="padding: 12px 24px; font-size: 15px;">Read the Briefs</a>
+        <a href="#archive" onclick="document.getElementById('archive').scrollIntoView({behavior:'smooth'}); return false;" class="btn-signin" style="border: 1px solid rgba(0,0,0,0.1); padding: 12px 24px; border-radius: 24px; font-size: 15px; display: flex; align-items: center; justify-content: center; color: #1a1a1a;">Explore Archive</a>
+    </div>
+    <div class="ag-info-grid" style="margin-top: 48px; display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 32px; border-top: 1px solid rgba(0,0,0,0.1); padding-top: 32px;">
+        <div>
+            <h3 style="font-family: 'Times New Roman', serif; font-size: 18px; margin-bottom: 8px;">Signal first.</h3>
+            <p style="font-size: 14px; color: #4b5563; line-height: 1.5;">We pull related coverage from multiple publishers so the summary reflects the shape of the story, not the loudest single headline.</p>
+        </div>
+        <div>
+            <h3 style="font-family: 'Times New Roman', serif; font-size: 18px; margin-bottom: 8px;">Built in layers.</h3>
+            <p style="font-size: 14px; color: #4b5563; line-height: 1.5;">The pipeline ingests, deduplicates, clusters, ranks, and rewrites every four hours so the homepage keeps evolving with the news cycle.</p>
+        </div>
+        <div>
+            <h3 style="font-family: 'Times New Roman', serif; font-size: 18px; margin-bottom: 8px;">Reader ready.</h3>
+            <p style="font-size: 14px; color: #4b5563; line-height: 1.5;">For people who want factual context, fast entry points, and enough structure to keep up without living inside ten open tabs.</p>
+        </div>
+        <div>
+            <h3 style="font-family: 'Times New Roman', serif; font-size: 18px; margin-bottom: 8px;">Database stack.</h3>
+            <p style="font-size: 14px; color: #4b5563; line-height: 1.5;">We now have a dedicated database page covering the Postgres provider choice, why it fits NewsLens, and how the data model grows from here.</p>
+            <a href="/database.html" class="ag-link-arrow" style="margin-top: 14px;">Open the provider page &rarr;</a>
+        </div>
+    </div>
+</div>
+
+<div class="ag-stats-container" id="agStats">
+    <div class="ag-stat"><div class="ag-stat-num" id="statArticles">0</div><div class="ag-stat-label">ARTICLES</div></div>
+    <div class="ag-stat"><div class="ag-stat-num" id="statSummaries">0</div><div class="ag-stat-label">SUMMARIES</div></div>
+    <div class="ag-stat"><div class="ag-stat-num" id="statSources">0</div><div class="ag-stat-label">SOURCES</div></div>
+    <div class="ag-stat"><div class="ag-stat-num" id="statVotes">0</div><div class="ag-stat-label">VOTES</div></div>
+</div>
+
+<div id="news" class="ag-section ag-latest">
+    <div class="ag-section-header">LATEST SUMMARY</div>
+    <h2 class="ag-section-title">What just landed.</h2>
+    <p class="ag-section-desc">Every big news story gets a balanced summary. Here's the freshest one &mdash; editor's pick first, or newest overall.</p>
+    
+    <div class="ag-featured-card" id="agFeaturedCard">
+        <div class="loading">Loading...</div>
+    </div>
+</div>
+
+<div class="ag-section ag-trending">
+    <div class="ag-section-header">TRENDING TOPICS</div>
+    <div style="display:flex; justify-content:space-between; align-items:baseline;">
+        <h2 class="ag-section-title">What others are reading.</h2>
+    </div>
+    <div class="ag-trending-grid" id="agTrendingGrid">
+        <div class="loading">Loading...</div>
+    </div>
+</div>
+
+<div class="ag-section ag-recent">
+    <div class="ag-section-header">RECENT WORK</div>
+    <div style="display:flex; justify-content:space-between; align-items:baseline;">
+        <h2 class="ag-section-title">What we shipped this week.</h2>
+    </div>
+    <div class="ag-recent-list" id="agRecentList">
+        <div class="loading">Loading...</div>
+    </div>
+</div>
+
+<div id="archive" class="ag-section ag-recent">
+    <div class="ag-section-header">ARCHIVE</div>
+    <div style="display:flex; justify-content:space-between; align-items:baseline;">
+        <h2 class="ag-section-title">Past summaries.</h2>
+        <input type="date" id="archiveDate" class="ag-date-picker" onchange="loadArchive(this.value)" />
+    </div>
+    <div class="ag-recent-list" id="agArchiveList">
+        <div class="no-results" style="padding: 20px 0; color: #666;">Select a date to view past summaries.</div>
+    </div>
+</div>
+ 
+<footer class="footer">
+    <div class="footer-col">
+        <h4>NewsLens</h4>
+        <p>AI-powered balanced news summaries from multiple Indian and international sources</p>
+        <p>Auto-updates every 4 hours</p>
+    </div>
+    <div class="footer-col">
+        <h4>Links</h4>
+        <a href="#news" onclick="document.getElementById('news').scrollIntoView({behavior:'smooth'});return false;">Latest news</a>
+        <a href="/briefs">Briefs feed</a>
+        <a href="#archive" onclick="document.getElementById('archive').scrollIntoView({behavior:'smooth'});return false;">Archive</a>
+        <a href="/analytics">Analytics</a>
+        <a href="/database.html">Database stack</a>
+        <a href="/contact">Contact Us</a>
+    </div>
+    <div class="footer-col">
+        <h4>Legal</h4>
+        <a href="#" onclick="openTerms('terms');return false;">Terms of Use</a>
+        <a href="#" onclick="openTerms('privacy');return false;">Privacy Policy</a>
+        <a href="#" onclick="openTerms('refund');return false;">Refund Policy</a>
+    </div>
+</footer>
+ 
+<div class="footer-bottom">
+    <p>Copyright &copy; 2026 NewsLens. Made by Anonymous.</p>
+    <div style="display:flex;gap:24px;align-items:center;">
+        <a href="#" onclick="openTerms('terms');return false;">Terms of Use</a>
+        <a href="#" onclick="openTerms('privacy');return false;">Privacy Policy</a>
+        <a href="#" onclick="openTerms('refund');return false;">Refund Policy</a>
+        <button class="back-to-top" onclick="window.scrollTo({top:0,behavior:'smooth'})">Back to Top ↑</button>
+    </div>
+</div>
+ 
+<div class="modal-overlay" id="modalOverlay" onclick="closeModal(event)">
+    <div class="modal" id="modal">
+        <span class="modal-close" onclick="closeModalDirect()">&#x2715;</span>
+        <h2 id="modalTopic"></h2>
+        <div class="summary" id="modalSummary"></div>
+        <div class="custom-prompt-box" id="customPromptBox">
+            <button class="prompt-toggle-btn" onclick="togglePromptInput()">Set Your Prompt</button>
+            <div class="prompt-input-area" id="promptInputArea">
+                <textarea id="customPromptText" maxlength="200" placeholder="e.g. explain like a cricket commentator, summarize like a whatsapp forward..."></textarea>
+                <div class="prompt-actions">
+                    <span class="prompt-hint">1 free use &middot; resets after</span>
+                    <button class="prompt-submit" onclick="applyCustomPrompt()">Apply</button>
+                </div>
+            </div>
+        </div>
+        <div class="vote-strip">
+            <button class="vote-btn" onclick="sendVote(document.getElementById('modal').dataset.summaryId, 1)">&#x25B2; Upvote</button>
+            <button class="vote-btn" onclick="sendVote(document.getElementById('modal').dataset.summaryId, -1)">&#x25BC; Downvote</button>
+        </div>
+        <div class="modal-label">Sources Used</div>
+        <div class="source-chips" id="modalSources"></div>
+        <div class="modal-label">Original Articles</div>
+        <div class="links-list" id="modalLinks"></div>
+    </div>
+</div>
+ 
+<div class="terms-overlay" id="termsOverlay" onclick="closeTerms(event)">
+    <div class="terms-modal" id="termsModal">
+        <span class="terms-close" onclick="closeTermsDirect()">&#x2715;</span>
+        <h2 id="termsTitle"></h2>
+        <div id="termsContent"></div>
+    </div>
+</div>
+ 
+<script>
+    let currentUser = null;
+    let googleClientId = '';
+
+    function apiUrl(path) {
+        const base = (localStorage.getItem('API_BASE') || '').trim().replace(/\/$/, '');
+        if (!path.startsWith('/')) path = '/' + path;
+        return base ? base + path : path;
+    }
+
+    function toggleMobileMenu() {
+        const menu = document.getElementById('mobileNav');
+        const overlay = document.getElementById('mobileNavOverlay');
+        const btn = document.getElementById('burgerBtn');
+        menu.classList.toggle('open');
+        if(overlay) overlay.classList.toggle('open');
+        if(btn) btn.classList.toggle('open');
+    }
+
+    function toggleUserMenu() {
+        const dropdown = document.getElementById('userDropdown');
+        dropdown.classList.toggle('open');
+    }
+
+    async function logoutUser(e) {
+        if(e) e.stopPropagation();
+        try {
+            await fetch(apiUrl('/api/auth/logout'), { method: 'POST', credentials: 'same-origin' });
+        } catch(e) {}
+        currentUser = null;
+        if(document.getElementById('userDropdown')) document.getElementById('userDropdown').classList.remove('open');
+        await loadMe();
+    }
+
+    async function loadMe() {
+        try {
+            const res = await fetch(apiUrl('/api/auth/me'), { credentials: 'same-origin' });
+            const data = await res.json();
+            currentUser = data.user || null;
+            
+            const authBtn = document.getElementById('authBtn');
+            const createAccBtn = document.getElementById('createAccBtn');
+            const userProfile = document.getElementById('userProfile');
+            const mobileAuthGroup = document.getElementById('mobileAuthGroup');
+            
+            if (currentUser) {
+                if(authBtn) authBtn.style.display = 'none';
+                if(createAccBtn) createAccBtn.style.display = 'none';
+                if(mobileAuthGroup) mobileAuthGroup.style.display = 'none';
+                
+                if(userProfile) {
+                    userProfile.style.display = 'flex';
+                    document.getElementById('userAvatar').src = currentUser.avatar_url || 'https://via.placeholder.com/150';
+                    document.getElementById('userName').textContent = currentUser.name || 'User';
+                    document.getElementById('userEmail').textContent = currentUser.email || '';
+                }
+            } else {
+                if(authBtn) authBtn.style.display = 'block';
+                if(createAccBtn) createAccBtn.style.display = 'inline-block';
+                if(mobileAuthGroup) mobileAuthGroup.style.display = 'flex';
+                if(userProfile) userProfile.style.display = 'none';
+            }
+        } catch (e) {}
+    }
+
+    async function loadPublicConfig() {
+        try {
+            const res = await fetch(apiUrl('/api/config'));
+            const data = await res.json();
+            googleClientId = (data.google_client_id || '').trim();
+        } catch (e) {
+            googleClientId = '';
+        }
+    }
+
+    async function startGoogleLogin() {
+        if (!googleClientId) {
+            await loadPublicConfig();
+        }
+        const clientId = googleClientId;
+        if (!clientId) {
+            alert('Google login is not configured yet. Set GOOGLE_CLIENT_ID in backend env.');
+            return;
+        }
+        const isLocalhost = location.hostname === 'localhost' || location.hostname === '127.0.0.1';
+        if (!isLocalhost && location.protocol !== 'https:') {
+            alert('Google login requires HTTPS (except localhost). Open this app on https:// or localhost.');
+            return;
+        }
+        if (!window.google || !google.accounts || !google.accounts.id) {
+            alert('Google identity script not loaded.');
+            return;
+        }
+        google.accounts.id.initialize({
+            client_id: clientId,
+            callback: async (response) => {
+                const res = await fetch(apiUrl('/api/auth/google'), {
+                    method: 'POST',
+                    credentials: 'same-origin',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ credential: response.credential })
+                });
+                const data = await res.json();
+                if (!res.ok) {
+                    alert(data.error || 'Login failed');
+                    return;
+                }
+                await loadMe();
+                await loadTrending();
+            }
+        });
+        google.accounts.id.prompt((notification) => {
+            if (notification && notification.isNotDisplayed && notification.isNotDisplayed()) {
+                alert('Google login prompt not displayed: ' + (notification.getNotDisplayedReason?.() || 'unknown reason'));
+                return;
+            }
+            if (notification && notification.isSkippedMoment && notification.isSkippedMoment()) {
+                alert('Google login prompt was skipped: ' + (notification.getSkippedReason?.() || 'unknown reason'));
+            }
+        });
+    }
+ 
+    window.addEventListener('scroll', () => {
+        const scrollTop = window.scrollY;
+        const docHeight = document.body.scrollHeight - window.innerHeight;
+        document.getElementById('progressBar').style.width = (scrollTop / docHeight * 100) + '%';
+        const nav = document.getElementById('mainNav');
+        scrollTop > 50 ? nav.classList.add('scrolled') : nav.classList.remove('scrolled');
+    });
+ 
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                setTimeout(() => entry.target.classList.add('visible'), parseInt(entry.target.dataset.delay) || 0);
+                observer.unobserve(entry.target);
+            }
+        });
+    }, { threshold: 0.15 });
+ 
+    document.querySelectorAll('.feature, .how-item, .section-label').forEach((el, i) => {
+        el.dataset.delay = i * 80;
+        observer.observe(el);
+    });
+ 
+    function animateCards(targetId) {
+        document.querySelectorAll(`#${targetId} .card`).forEach((card, i) => {
+            setTimeout(() => card.classList.add('visible'), i * 60);
+        });
+    }
+ 
+    const TERMS_CONTENT = {
+        terms: {
+            title: 'Terms of Use',
+            body: `<p><em>Last updated: April 2026</em></p><h3>1. Agreement</h3><p>By using NewsLens (site, APIs, and related pages), you agree to these Terms. If you do not agree, do not use the service.</p><h3>2. What NewsLens does</h3><p>NewsLens fetches public RSS headlines, groups related stories, and generates short summaries. NewsLens is an informational aggregator, not a publisher of original reporting.</p><h3>3. Freshness and coverage</h3><p>The pipeline targets recent stories (primarily same-day items). Availability depends on feed publishers and API services. Missing stories or delays can occur.</p><h3>4. User accounts and actions</h3><p>Users may sign in with Google and can vote or comment on stories. You are responsible for your activity. Abuse, spam, harassment, or unlawful use is prohibited.</p><h3>5. Content ownership</h3><p>Original articles, trademarks, and media belong to their respective publishers. NewsLens provides links for reference; users should verify details at the source.</p><h3>6. AI summaries</h3><p>Summaries are machine-generated and may contain errors. Do not rely on summaries alone for legal, medical, financial, or safety decisions.</p><h3>7. Admin and moderation</h3><p>Operators may run maintenance actions, exports, backups, or data purges. Misuse of admin routes is prohibited.</p><h3>8. Disclaimer</h3><p>The service is provided "as is" without warranties of any kind.</p><h3>9. Limitation of liability</h3><p>To the maximum extent allowed by law, NewsLens and its operators are not liable for indirect or consequential losses from use of the service.</p><h3>10. Changes</h3><p>These Terms may be updated by posting a revised version. Continued use means acceptance of the updated Terms.</p><h3>11. Contact</h3><p>Questions about these Terms can be sent via the Contact page.</p>`
+        },
+        privacy: {
+            title: 'Privacy Policy',
+            body: `<p><em>Last updated: April 2026</em></p><h3>1. Overview</h3><p>This policy explains how NewsLens processes data for reading, Google login, voting, comments, admin operations, and AI summarization.</p><h3>2. Data we collect</h3><p><strong>News data:</strong> headlines, links, descriptions, and generated summaries from public RSS feeds.</p><p><strong>Account data:</strong> when you sign in with Google, we store basic profile fields (Google user id, email, name, avatar).</p><p><strong>Engagement data:</strong> votes and comments linked to your account.</p><p><strong>Technical data:</strong> standard server logs and error logs for security and reliability.</p><h3>3. Cookies and sessions</h3><p>Session cookies are used for authentication (user/admin). No advertising cookies are used by default.</p><h3>4. Third-party services</h3><p>Google is used for authentication. AI providers may be used for summary generation. Their independent policies also apply.</p><h3>5. Data retention</h3><p>Retention may vary by deployment. Admin users may export, back up, or purge stored data.</p><h3>6. Security</h3><p>We use token verification, session controls, and server-side checks. No system can guarantee absolute security.</p><h3>7. Your choices</h3><p>You may avoid sign-in, stop using the service, or request operator action for account/content concerns where feasible.</p><h3>8. Policy changes</h3><p>This policy may be updated over time. The latest version is published on this page.</p><h3>9. Contact</h3><p>For privacy questions, use the Contact page.</p>`
+        },
+        refund: {
+            title: 'Refund Policy',
+            body: `<p><em>Last updated: April 2026</em></p><h3>1. Scope</h3><p>This policy applies to any premium features or subscriptions offered by NewsLens.</p><h3>2. Standard Refunds</h3><p>If you are not satisfied with a premium feature, you may request a refund within 7 days of the transaction.</p><h3>3. Processing</h3><p>Refunds are processed back to the original payment method and may take 5-10 business days to appear on your statement.</p><h3>4. Exceptions</h3><p>We reserve the right to deny refund requests in cases of abuse or terms of service violations.</p><h3>5. Contact</h3><p>Please use the Contact page to initiate a refund request.</p>`
+        }
+    };
+ 
+    function openTerms(type) {
+        document.getElementById('termsTitle').textContent = TERMS_CONTENT[type].title;
+        document.getElementById('termsContent').innerHTML = TERMS_CONTENT[type].body;
+        document.getElementById('termsOverlay').classList.add('active');
+    }
+    function closeTerms(e) { if (e.target === document.getElementById('termsOverlay')) closeTermsDirect(); }
+    function closeTermsDirect() { document.getElementById('termsOverlay').classList.remove('active'); }
+ 
+    let currentLevel = 'Curious';
+    function setLevel(level, btnEl) {
+        currentLevel = level;
+        document.querySelectorAll('.ag-level-btn').forEach(b => b.classList.remove('active'));
+        btnEl.classList.add('active');
+    }
+
+    async function loadStats() {
+        try {
+            const res = await fetch(apiUrl('/api/stats'));
+            const data = await res.json();
+            document.getElementById('statArticles').textContent = data.articles.toLocaleString();
+            document.getElementById('statSummaries').textContent = data.summaries.toLocaleString();
+            document.getElementById('statSources').textContent = data.users.toLocaleString(); // Or mock subjects
+            document.getElementById('statVotes').textContent = data.votes.toLocaleString();
+        } catch(e) {}
+    }
+
+    function renderFeaturedCard(item) {
+        const title = item.headline || item.topic || 'Untitled';
+        const authors = (item.sources || []).join(', ') || 'Various Sources';
+        const dateStr = new Date(item.created_at).toLocaleDateString('en-GB', {day:'numeric', month:'short', year:'numeric'});
+        const idStr = `AG-2026.04-${String(item.id).padStart(3, '0')}`;
+        const views = (item.vote_score || item.score || 0) + ' VOTES';
+        
+        document.getElementById('agFeaturedCard').innerHTML = `
+            <div class="ag-cat-dot">${item.category || 'LATEST'}</div>
+            <div class="ag-feat-title">${title}</div>
+            <div class="ag-feat-authors">${authors}</div>
+            <div class="ag-feat-highlights">
+                <span class="ag-feat-highlights-label">HIGHLIGHTS</span>
+                <div class="ag-feat-highlights-text">${item.summary}</div>
+            </div>
+            <div class="ag-feat-footer" style="align-items: center;">
+                <span style="display:flex; gap:8px; align-items:center;">
+                    <button class="vote-btn" onclick="sendVote(${item.id}, 1)" style="padding: 2px 8px;">&#x25B2;</button> 
+                    ${views}
+                </span>
+                <span>${idStr}</span>
+                <span>${dateStr}</span>
+            </div>
+        `;
+    }
+
+    function renderTrendingGrid(items) {
+        if (!items || !items.length) {
+            document.getElementById('agTrendingGrid').innerHTML = '<div class="no-results">No trending topics.</div>';
+            return;
+        }
+        let html = '';
+        items.forEach(item => {
+            const title = item.headline || item.topic || 'Untitled';
+            const views = (item.vote_score || item.score || 0) + ' VOTES';
+            html += `
+                <div class="ag-trending-card" style="cursor: pointer;" onclick="openModal(${item.id})">
+                    <div class="ag-trending-title">${title}</div>
+                    <div class="ag-trending-footer" style="align-items: center;">
+                        <span class="ag-trending-views" style="display:flex; gap:8px; align-items:center;">
+                            <button class="vote-btn" onclick="event.stopPropagation(); sendVote(${item.id}, 1)" style="padding: 2px 8px;">&#x25B2;</button> 
+                            ${views}
+                        </span>
+                        <span class="ag-trending-link">Read summary &rarr;</span>
+                    </div>
+                </div>
+            `;
+        });
+        document.getElementById('agTrendingGrid').innerHTML = html;
+    }
+
+    function renderRecentList(items, targetId = 'agRecentList') {
+        if (!items || !items.length) {
+            document.getElementById(targetId).innerHTML = '<div class="no-results" style="padding: 20px 0; color: #666;">No summaries found.</div>';
+            return;
+        }
+        let html = '';
+        items.forEach(item => {
+            const title = item.headline || item.topic || 'Untitled';
+            const authors = (item.sources || []).join(', ') || 'Various Sources';
+            const dateStr = new Date(item.created_at).toLocaleDateString('en-GB', {month:'short', year:'numeric'});
+            const views = (item.vote_score || item.score || 0) + ' VOTES';
+            
+            html += `
+                <div class="ag-recent-item" style="cursor: pointer;" onclick="openModal(${item.id})">
+                    <div>
+                        <div class="ag-recent-meta">Summary &middot; ${dateStr}</div>
+                        <div class="ag-recent-title">${title}</div>
+                        <div class="ag-recent-authors">${authors}</div>
+                        <span class="ag-trending-views" style="display:inline-flex; gap:8px; align-items:center; margin-top:8px; font-size:11px;">
+                            <button class="vote-btn" onclick="event.stopPropagation(); sendVote(${item.id}, 1)" style="padding: 2px 8px;">&#x25B2;</button> 
+                            ${views}
+                        </span>
+                    </div>
+                    <div class="ag-recent-arrow">&rarr;</div>
+                </div>
+            `;
+        });
+        document.getElementById(targetId).innerHTML = html;
+    }
+
+    async function loadTrending() {
+        let latestNews = [];
+        try {
+            const recentRes = await fetch(apiUrl('/api/latest-news'));
+            if (recentRes.ok) {
+                latestNews = await recentRes.json();
+                if (latestNews.length > 0) {
+                    renderFeaturedCard(latestNews[0]); // The very newest summary
+                    renderRecentList(latestNews.slice(1, 6)); // Next 5 are recent
+                }
+            } else {
+                console.error("Failed to load recent news:", recentRes.status);
+            }
+        } catch (e) {
+            console.error("Error fetching recent news:", e);
+        }
+
+        try {
+            const trendRes = await fetch(apiUrl('/api/trending'));
+            if (trendRes.ok) {
+                const trendData = await trendRes.json();
+                // Filter out the featured item if it happens to be trending
+                const filteredTrending = trendData.filter(item => !latestNews[0] || item.id !== latestNews[0].id);
+                renderTrendingGrid(filteredTrending.slice(0, 6)); 
+            } else {
+                console.error("Failed to load trending data:", trendRes.status);
+            }
+        } catch (e) {
+            console.error("Error fetching trending data:", e);
+        }
+    }
+
+    async function loadArchive(date) {
+        if (!date) return;
+        document.getElementById('agArchiveList').innerHTML = '<div class="loading">Loading archive...</div>';
+        try {
+            const res = await fetch(apiUrl('/api/archive?date=' + encodeURIComponent(date)));
+            if (res.ok) {
+                const data = await res.json();
+                renderRecentList(data, 'agArchiveList');
+            } else {
+                document.getElementById('agArchiveList').innerHTML = '<div class="no-results" style="padding: 20px 0; color: #666;">Error loading archive.</div>';
+            }
+        } catch (e) {
+            document.getElementById('agArchiveList').innerHTML = '<div class="no-results" style="padding: 20px 0; color: #666;">Network error.</div>';
+        }
+    }
+
+
+
+    async function sendVote(summaryId, vote) {
+        if (!currentUser) {
+            alert('Please login with Google to vote.');
+            return;
+        }
+        const res = await fetch(apiUrl(`/api/news/${summaryId}/vote`), {
+            method: 'POST',
+            credentials: 'same-origin',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ vote })
+        });
+        const data = await res.json();
+        if (!res.ok) {
+            alert(data.error || 'Vote failed');
+            return;
+        }
+        await loadTrending();
+    }
+ 
+    async function openModal(id) {
+        const overlay = document.getElementById('modalOverlay');
+        const res = await fetch(apiUrl('/api/summary/' + id));
+        const item = await res.json();
+        document.getElementById('modal').dataset.summaryId = id;
+        document.getElementById('modalTopic').textContent = item.headline || item.topic;
+        document.getElementById('modalSummary').textContent = item.summary;
+
+        const sourcesEl = document.getElementById('modalSources');
+        sourcesEl.innerHTML = '';
+        (item.sources || []).forEach(s => {
+            const chip = document.createElement('span');
+            chip.className = 'source-chip';
+            chip.textContent = s;
+            sourcesEl.appendChild(chip);
+        });
+
+        const linksEl = document.getElementById('modalLinks');
+        linksEl.innerHTML = '';
+        (item.links || []).forEach((entry, i) => {
+            const url = typeof entry === 'string' ? entry : (entry && entry.link);
+            if (!url) return;
+            const a = document.createElement('a');
+            a.href = url;
+            a.target = '_blank';
+            a.rel = 'noopener noreferrer';
+            let src = 'Source';
+            if (entry && typeof entry === 'object' && entry.source) {
+                src = entry.source;
+            } else if (item.sources && item.sources[i]) {
+                src = item.sources[i];
+            }
+            a.textContent = `Article ${i + 1} — ${src}`;
+            linksEl.appendChild(a);
+        });
+        overlay.style.display = 'flex';
+        requestAnimationFrame(() => overlay.classList.add('active'));
+    }
+ 
+    function closeModal(e) { if (e.target === document.getElementById('modalOverlay')) closeModalDirect(); }
+    function closeModalDirect() {
+        const overlay = document.getElementById('modalOverlay');
+        overlay.classList.remove('active');
+        setTimeout(() => overlay.style.display = 'none', 200);
+    }
+ 
+    function togglePromptInput() {
+        const area = document.getElementById('promptInputArea');
+        area.style.display = area.style.display === 'none' || area.style.display === '' ? 'block' : 'none';
+    }
+ 
+    async function applyCustomPrompt() {
+        const used = localStorage.getItem('customPromptUsed');
+        if (used) { alert('Free usage done. Payment coming soon to unlock more.'); return; }
+        const instruction = document.getElementById('customPromptText').value.trim();
+        if (!instruction) { alert('Write something first'); return; }
+        const summaryId = document.getElementById('modal').dataset.summaryId;
+        if (!summaryId) return;
+        document.getElementById('modalSummary').innerHTML = 'Generating <span style="display:inline-flex;gap:4px;margin-left:4px;vertical-align:middle;"><span style="width:5px;height:5px;background:#ccc;border-radius:50%;display:inline-block;animation:dotPulse 1.2s infinite;"></span><span style="width:5px;height:5px;background:#ccc;border-radius:50%;display:inline-block;animation:dotPulse 1.2s infinite 0.2s;"></span><span style="width:5px;height:5px;background:#ccc;border-radius:50%;display:inline-block;animation:dotPulse 1.2s infinite 0.4s;"></span></span>';
+        const res = await fetch(apiUrl('/api/summarize/custom'), {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ summary_id: parseInt(summaryId), instruction })
+        });
+        const data = await res.json();
+        document.getElementById('modalSummary').textContent = data.summary;
+        localStorage.setItem('customPromptUsed', 'true');
+        document.getElementById('promptInputArea').style.display = 'none';
+    }
+
+    async function checkStatus() {
+        try {
+            const res = await fetch(apiUrl('/api/status'));
+            const data = await res.json();
+            const dot = document.getElementById('liveDot');
+            const text = document.getElementById('liveText');
+            const bar = document.getElementById('nextUpdateBar');
+            const nextTime = document.getElementById('nextUpdateTime');
+            if (dot) {
+                dot.style.background = '#111';
+                dot.style.boxShadow = '0 0 0 2px rgba(0,0,0,0.15)';
+            }
+            if (text) text.textContent = 'LIVE';
+            if (data.next_update && bar && nextTime) { bar.style.display = 'block'; nextTime.textContent = data.next_update; }
+        } catch(e) {
+            const text = document.getElementById('liveText');
+            if (text) text.textContent = 'offline';
+        }
+    }
+ 
+    checkStatus();
+    loadPublicConfig();
+    loadMe();
+    loadStats();
+    loadTrending();
+    setInterval(loadStats, 5 * 60 * 1000);
+    setInterval(loadTrending, 5 * 60 * 1000);
+    // Keep “next update” in sync with fixed 4-hour slots (server clock)
+    setInterval(checkStatus, 60 * 1000);
+</script>
+<script src="https://accounts.google.com/gsi/client" async defer></script>
+</body>
+</html>
