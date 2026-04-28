@@ -8,7 +8,7 @@
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { 
-            font-family: 'Inter', sans-serif; background-color: #f9f8f6; color: #1a1a1a; font-size: 16px; line-height: 1.6; 
+            font-family: 'Inter', sans-serif; background-color: #E4EEF9; color: #1a1a1a; font-size: 16px; line-height: 1.6; 
             background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200' viewBox='0 0 100 100'%3E%3Cg stroke='rgba(0,0,0,0.04)' stroke-width='0.4' fill='none'%3E%3Cpath d='M0 20 Q 30 50, 100 10' /%3E%3Cpath d='M10 100 Q 50 30, 90 0' /%3E%3Cpath d='M0 60 Q 40 80, 100 50' /%3E%3Cpath d='M20 0 Q 70 50, 30 100' /%3E%3Cpath d='M0 80 Q 50 100, 100 70' /%3E%3Cpath d='M80 0 Q 100 50, 70 100' /%3E%3C/g%3E%3C/svg%3E");
             background-attachment: fixed;
             animation: bgDrift 60s linear infinite;
@@ -26,7 +26,7 @@
  
         .nav {
             position: sticky; top: 0;
-            background: #f9f8f6;
+            background: rgba(228, 238, 249, 0.95);
             display: flex; justify-content: space-between; align-items: center;
             padding: 24px 48px;
             border-bottom: 1px solid rgba(0,0,0,0.08);
@@ -428,7 +428,27 @@
         .terms-close:hover { color: #111; transform: rotate(90deg); }
         /* AG Hero */
         .ag-hero {
-            max-width: 800px; margin: 0 auto; padding: 120px 24px 80px; text-align: center;
+            position: relative;
+            width: 100%;
+            min-height: 85vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 120px 24px 120px;
+            text-align: center;
+            overflow: hidden;
+            background: linear-gradient(180deg, #E4EEF9 0%, #D4E5F1 100%);
+        }
+        .ag-hero-inner {
+            position: relative;
+            z-index: 1;
+            max-width: 980px;
+            width: 100%;
+            margin: 0 auto;
+            padding: 0 24px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
         }
         .ag-hero-badge {
             display: inline-flex; align-items: center; gap: 8px; font-size: 11px;
@@ -613,30 +633,31 @@
 </div>
  
 <div class="ag-hero">
-    <div class="ag-hero-badge"><span class="ag-dot"></span> INDEPENDENT &middot; MULTI-SOURCE &middot; UPDATED DAILY</div>
-    <h1 class="ag-hero-title">Watch the story<br><em>take shape.</em></h1>
-    <p class="ag-hero-subtitle">NewsLens follows a breaking topic across multiple publishers, clusters the signal, and turns the noise into a brief you can actually use.<br>Quick enough for the scroll. Deep enough for the second read.</p>
-    <div style="margin-top: 32px; display: flex; justify-content: center; gap: 16px;">
-        <a href="/briefs" class="btn-create-account" style="padding: 12px 24px; font-size: 15px;">Read the Briefs</a>
-        <a href="#archive" onclick="document.getElementById('archive').scrollIntoView({behavior:'smooth'}); return false;" class="btn-signin" style="border: 1px solid rgba(0,0,0,0.1); padding: 12px 24px; border-radius: 24px; font-size: 15px; display: flex; align-items: center; justify-content: center; color: #1a1a1a;">Explore Archive</a>
+    <canvas id="agChaosCanvas"></canvas>
+    <div class="ag-hero-inner">
+        <div class="ag-hero-badge"><span class="ag-dot"></span> INDEPENDENT &middot; MULTI-SOURCE &middot; UPDATED DAILY</div>
+        <h1 class="ag-hero-title">Watch the story<br><em>take shape.</em></h1>
+        <p class="ag-hero-subtitle">NewsLens follows a breaking topic across multiple publishers, clusters the signal, and turns the noise into a brief you can actually use.<br>Quick enough for the scroll. Deep enough for the second read.</p>
+        <div style="margin-top: 32px; display: flex; justify-content: center; gap: 16px;">
+            <a href="/briefs" class="btn-create-account" style="padding: 12px 24px; font-size: 15px;">Read the Briefs</a>
+            <a href="#archive" onclick="document.getElementById('archive').scrollIntoView({behavior:'smooth'}); return false;" class="btn-signin" style="border: 1px solid rgba(0,0,0,0.1); padding: 12px 24px; border-radius: 24px; font-size: 15px; display: flex; align-items: center; justify-content: center; color: #1a1a1a;">Explore Archive</a>
+        </div>
     </div>
-    <div class="ag-info-grid" style="margin-top: 48px; display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 32px; border-top: 1px solid rgba(0,0,0,0.1); padding-top: 32px;">
+</div>
+
+<div class="ag-section ag-hero-summary">
+    <div class="ag-info-grid" style="margin: 0 auto; max-width: 1200px; display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 32px; border-top: 1px solid rgba(0,0,0,0.08); padding-top: 32px; padding-bottom: 40px;">
         <div>
             <h3 style="font-family: 'Times New Roman', serif; font-size: 18px; margin-bottom: 8px;">Signal first.</h3>
-            <p style="font-size: 14px; color: #4b5563; line-height: 1.5;">We pull related coverage from multiple publishers so the summary reflects the shape of the story, not the loudest single headline.</p>
+            <p style="font-size: 14px; color: #4b5563; line-height: 1.6;">We pull related coverage from multiple publishers so the summary reflects the shape of the story, not the loudest single headline.</p>
         </div>
         <div>
             <h3 style="font-family: 'Times New Roman', serif; font-size: 18px; margin-bottom: 8px;">Built in layers.</h3>
-            <p style="font-size: 14px; color: #4b5563; line-height: 1.5;">The pipeline ingests, deduplicates, clusters, ranks, and rewrites every four hours so the homepage keeps evolving with the news cycle.</p>
+            <p style="font-size: 14px; color: #4b5563; line-height: 1.6;">The pipeline ingests, deduplicates, clusters, ranks, and rewrites every four hours so the homepage keeps evolving with the news cycle.</p>
         </div>
         <div>
             <h3 style="font-family: 'Times New Roman', serif; font-size: 18px; margin-bottom: 8px;">Reader ready.</h3>
-            <p style="font-size: 14px; color: #4b5563; line-height: 1.5;">For people who want factual context, fast entry points, and enough structure to keep up without living inside ten open tabs.</p>
-        </div>
-        <div>
-            <h3 style="font-family: 'Times New Roman', serif; font-size: 18px; margin-bottom: 8px;">Database stack.</h3>
-            <p style="font-size: 14px; color: #4b5563; line-height: 1.5;">We now have a dedicated database page covering the Postgres provider choice, why it fits NewsLens, and how the data model grows from here.</p>
-            <a href="/database.html" class="ag-link-arrow" style="margin-top: 14px;">Open the provider page &rarr;</a>
+            <p style="font-size: 14px; color: #4b5563; line-height: 1.6;">For people who want factual context, fast entry points, and enough structure to keep up without living inside ten open tabs.</p>
         </div>
     </div>
 </div>
@@ -1187,12 +1208,125 @@
     checkStatus();
     loadPublicConfig();
     loadMe();
+    initChaosBackground();
     loadStats();
     loadTrending();
     setInterval(loadStats, 5 * 60 * 1000);
     setInterval(loadTrending, 5 * 60 * 1000);
     // Keep “next update” in sync with fixed 4-hour slots (server clock)
     setInterval(checkStatus, 60 * 1000);
+
+    function initChaosBackground() {
+        if (!document.body.classList.contains('page-home')) return;
+        const canvas = document.getElementById('agChaosCanvas');
+        if (!canvas || !canvas.getContext) return;
+        const ctx = canvas.getContext('2d', { alpha: false });
+        const container = canvas.parentElement;
+        let width = container.clientWidth;
+        let height = container.clientHeight;
+        let particles = [];
+
+        const PARTICLE_COUNT = 2200;
+        const BG_COLOR = '#E4EEF9';
+        const STROKE_COLOR = 'rgba(118, 118, 118, ';
+        const TRAIL_FADE = 0.0025;
+
+        canvas.style.pointerEvents = 'none';
+
+        const swirlCenters = [];
+
+        class Particle {
+            constructor() {
+                this.init();
+            }
+            init() {
+                this.x = Math.random() * width;
+                this.y = Math.random() * height;
+                this.px = this.x;
+                this.py = this.y;
+                this.vx = (Math.random() - 0.5) * 1.4;
+                this.vy = (Math.random() - 0.5) * 1.4;
+                this.accel = 0.04 + Math.random() * 0.08;
+                this.mag = Math.random() * 1.3 + 0.8;
+                this.life = Math.random() * 260 + 180;
+                this.accent = Math.random() < 0.05;
+                this.centerIndex = Math.floor(Math.random() * swirlCenters.length);
+                this.age = 0;
+            }
+            update() {
+                this.age++;
+                this.px = this.x;
+                this.py = this.y;
+                const center = swirlCenters[this.centerIndex] || swirlCenters[0] || { x: width / 2, y: height / 2 };
+                const dx = center.x - this.x;
+                const dy = center.y - this.y;
+                const distance = Math.sqrt(dx * dx + dy * dy) + 0.001;
+                const normX = dx / distance;
+                const normY = dy / distance;
+                const swirl = (Math.sin(this.age * 0.02) + Math.cos(this.age * 0.018)) * 0.18;
+                const perpX = -normY * swirl;
+                const perpY = normX * swirl;
+                this.vx += (normX * 0.03 + perpX) * this.accel;
+                this.vy += (normY * 0.03 + perpY) * this.accel;
+                const speed = Math.sqrt(this.vx * this.vx + this.vy * this.vy);
+                if (speed > this.mag) {
+                    this.vx = (this.vx / speed) * this.mag;
+                    this.vy = (this.vy / speed) * this.mag;
+                }
+                this.x += this.vx;
+                this.y += this.vy;
+                if (this.age > this.life || this.x < -220 || this.x > width + 220 || this.y < -220 || this.y > height + 220) {
+                    this.init();
+                }
+            }
+            draw() {
+                ctx.beginPath();
+                ctx.moveTo(this.px, this.py);
+                ctx.lineTo(this.x, this.y);
+                const opacity = Math.sin((this.age / this.life) * Math.PI) * 0.085;
+                ctx.lineWidth = this.accent ? 1.5 : 1.1;
+                if (this.accent) {
+                    ctx.strokeStyle = `rgba(140, 138, 132, ${Math.min(opacity * 0.95, 0.14)})`;
+                } else {
+                    ctx.strokeStyle = STROKE_COLOR + Math.min(opacity, 0.14) + ')';
+                }
+                ctx.stroke();
+            }
+        }
+
+        function resizeCanvas() {
+            width = container.clientWidth;
+            height = container.clientHeight;
+            canvas.width = width;
+            canvas.height = height;
+            canvas.style.width = width + 'px';
+            canvas.style.height = height + 'px';
+            swirlCenters.length = 0;
+            for (let i = 0; i < 3; i++) {
+                swirlCenters.push({
+                    x: width * (0.2 + i * 0.25 + (Math.random() - 0.5) * 0.12),
+                    y: height * (0.25 + Math.random() * 0.4)
+                });
+            }
+            particles = Array.from({ length: PARTICLE_COUNT }, () => new Particle());
+            ctx.fillStyle = BG_COLOR;
+            ctx.fillRect(0, 0, width, height);
+        }
+
+        function animateChaos() {
+            ctx.fillStyle = `rgba(251, 250, 245, ${TRAIL_FADE})`;
+            ctx.fillRect(0, 0, width, height);
+            for (let i = 0; i < particles.length; i++) {
+                particles[i].update();
+                particles[i].draw();
+            }
+            requestAnimationFrame(animateChaos);
+        }
+
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
+        animateChaos();
+    }
 </script>
 <script src="https://accounts.google.com/gsi/client" async defer></script>
 </body>
