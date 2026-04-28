@@ -34,7 +34,8 @@ def _load_local_env():
                 key, value = line.split("=", 1)
                 key = key.strip()
                 value = value.strip().strip('"').strip("'")
-                if key and key not in os.environ:
+                if key:
+                    # Local dev expects `.env` to be the source of truth.
                     os.environ[key] = value
     except OSError:
         pass
@@ -57,7 +58,22 @@ app.secret_key = _secret
 app.config["SESSION_COOKIE_HTTPONLY"] = True
 app.config["SESSION_COOKIE_SAMESITE"] = "Lax"
 app.config["SESSION_COOKIE_SECURE"] = os.environ.get("SESSION_COOKIE_SECURE", "0").strip().lower() in ("1", "true", "yes")
-app.config['SEND_FILE_MAX_AGE_DEFAULT'] = 0
+
+# Static caching: keep 0 for local dev (fast iteration), but allow browsers/CDNs to cache
+# assets in production so cold-starts don't cascade into multiple re-downloads.
+_static_max_age_raw = (os.environ.get("STATIC_MAX_AGE") or "").strip()
+if _static_max_age_raw:
+    try:
+        app.config["SEND_FILE_MAX_AGE_DEFAULT"] = int(_static_max_age_raw)
+    except ValueError:
+        app.config["SEND_FILE_MAX_AGE_DEFAULT"] = 0
+else:
+    _is_prod_like = bool(
+        os.environ.get("RENDER_EXTERNAL_HOSTNAME")
+        or os.environ.get("RENDER")
+        or os.environ.get("ENV", "").strip().lower() == "production"
+    )
+    app.config["SEND_FILE_MAX_AGE_DEFAULT"] = 21600 if _is_prod_like else 0
 
 allowed_origins_raw = os.environ.get("ALLOWED_ORIGINS", "").strip()
 allowed_origins = [o.strip() for o in allowed_origins_raw.split(",") if o.strip()]
@@ -464,23 +480,44 @@ def database_page():
 def admin_login_page():
     return app.send_static_file('admin-login.html')
 
+@app.route("/health", methods=["GET"])
+def health():
+    # Lightweight health check (no DB hit) for uptime monitors / load balancers.
+    return jsonify({"ok": True})
+
+def _latest_items_for_user(user):
+    rows = _rows_for_latest_news()
+    return _with_votes_and_score(rows, user["id"] if user else None)
+
 @app.route('/api/trending', methods=['GET'])
 def get_trending():
-    rows = _rows_for_latest_news()
     user = _session_user()
-    items = _with_votes_and_score(rows, user["id"] if user else None)
+    items = _latest_items_for_user(user)
     items.sort(key=lambda x: (x.get("vote_score", 0), x.get("id", 0)), reverse=True)
     return jsonify(items)
 
 
 @app.route('/api/latest-news', methods=['GET'])
 def get_latest_news():
-    return get_trending()
+    user = _session_user()
+    # Already in newest-first order from `_rows_for_latest_news()`.
+    return jsonify(_latest_items_for_user(user))
 
 
 @app.route('/api/reels', methods=['GET'])
 def get_reels():
-    return get_trending()
+    # Briefs feed should be chronological, not "most voted".
+    return get_latest_news()
+
+
+@app.route("/api/home-feed", methods=["GET"])
+def home_feed():
+    """Single-call payload for homepage (faster on free-tier cold starts)."""
+    user = _session_user()
+    latest = _latest_items_for_user(user)
+    trending = list(latest)
+    trending.sort(key=lambda x: (x.get("vote_score", 0), x.get("id", 0)), reverse=True)
+    return jsonify({"latest": latest, "trending": trending})
 
 
 @app.route('/api/articles/recent', methods=['GET'])

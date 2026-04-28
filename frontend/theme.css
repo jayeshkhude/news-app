@@ -44,13 +44,14 @@ body::before {
     inset: -10%;
     z-index: 0;
     pointer-events: none;
-    /* Subtle background line-work (visible, but not distracting). */
-    opacity: 0.52;
-    background-image:
-        url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='720' height='720' viewBox='0 0 720 720'%3E%3Cg fill='none' stroke='%23aa9a84' stroke-opacity='0.46' stroke-width='1.2' stroke-linecap='round'%3E%3Cpath d='M-80 164C36 50 148 52 270 164s236 112 350 0 230-112 344 0'/%3E%3Cpath d='M-120 268C10 128 154 126 290 268s268 142 402 0 264-142 398 0'/%3E%3Cpath d='M-80 380C44 252 166 248 286 380s242 132 364 0 242-132 364 0'/%3E%3Cpath d='M-100 514C42 354 188 358 326 514s274 156 412 0 272-156 412 0'/%3E%3Cpath d='M-64 644C74 486 214 490 350 644s268 154 406 0 268-154 404 0'/%3E%3Cpath d='M156 -80C42 48 44 178 156 300s112 236 0 350-112 230 0 344'/%3E%3Cpath d='M314 -112C174 22 176 162 314 300s140 272 0 410-138 270 0 408'/%3E%3Cpath d='M478 -88C346 36 346 174 478 300s132 252 0 378-132 252 0 378'/%3E%3Cpath d='M620 -116C478 22 480 170 620 300s142 278 0 408-140 278 0 408'/%3E%3C/g%3E%3C/svg%3E");
-    background-size: 620px 620px;
+    /* Connected "thread" illustration (soft, non-distracting). */
+    opacity: 0.56;
+    background-image: url("/assets/bg-threads.svg");
+    background-size: cover;
     background-position: center;
-    animation: themeFlow 90s linear infinite;
+    background-repeat: no-repeat;
+    animation: themeFlow 140s linear infinite;
+    will-change: transform;
 }
 
 body::after {
@@ -60,11 +61,11 @@ body::after {
     z-index: 0;
     pointer-events: none;
     /* Warm “paper glow” (avoid white fog patches). */
-    opacity: 0.62;
+    opacity: 0.38;
     background:
         radial-gradient(circle at 14% 16%, rgba(198, 135, 86, 0.10), transparent 22%),
-        radial-gradient(circle at 86% 12%, rgba(255, 255, 255, 0.18), transparent 18%),
-        radial-gradient(circle at 52% 100%, rgba(214, 193, 165, 0.18), transparent 28%);
+        radial-gradient(circle at 86% 12%, rgba(198, 135, 86, 0.06), transparent 22%),
+        radial-gradient(circle at 52% 100%, rgba(214, 193, 165, 0.14), transparent 32%);
 }
 
 body > * {
@@ -81,6 +82,12 @@ body > * {
     }
     100% {
         transform: translate3d(-60px, 48px, 0) scale(1.04);
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    body::before {
+        animation: none;
     }
 }
 

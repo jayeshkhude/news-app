@@ -1030,34 +1030,31 @@
 
     async function loadTrending() {
         let latestNews = [];
+        let trendingData = [];
+
+        // One call for both lists (faster on free-tier cold starts).
         try {
-            const recentRes = await fetch(apiUrl('/api/latest-news'));
-            if (recentRes.ok) {
-                latestNews = await recentRes.json();
-                if (latestNews.length > 0) {
-                    renderFeaturedCard(latestNews[0]); // The very newest summary
-                    renderRecentList(latestNews.slice(1, 6)); // Next 5 are recent
-                }
+            const res = await fetch(apiUrl('/api/home-feed'), { credentials: 'same-origin' });
+            if (res.ok) {
+                const payload = await res.json();
+                latestNews = Array.isArray(payload.latest) ? payload.latest : [];
+                trendingData = Array.isArray(payload.trending) ? payload.trending : [];
             } else {
-                console.error("Failed to load recent news:", recentRes.status);
+                console.error("Failed to load home feed:", res.status);
             }
         } catch (e) {
-            console.error("Error fetching recent news:", e);
+            console.error("Error fetching home feed:", e);
         }
 
-        try {
-            const trendRes = await fetch(apiUrl('/api/trending'));
-            if (trendRes.ok) {
-                const trendData = await trendRes.json();
-                // Filter out the featured item if it happens to be trending
-                const filteredTrending = trendData.filter(item => !latestNews[0] || item.id !== latestNews[0].id);
-                renderTrendingGrid(filteredTrending.slice(0, 6)); 
-            } else {
-                console.error("Failed to load trending data:", trendRes.status);
-            }
-        } catch (e) {
-            console.error("Error fetching trending data:", e);
+        if (latestNews.length > 0) {
+            renderFeaturedCard(latestNews[0]); // newest summary
+            renderRecentList(latestNews.slice(1, 6)); // next 5
         }
+
+        // Filter out the featured item if it happens to be trending.
+        const filteredTrending = (trendingData.length ? trendingData : latestNews)
+            .filter(item => !latestNews[0] || item.id !== latestNews[0].id);
+        renderTrendingGrid(filteredTrending.slice(0, 6));
     }
 
     async function loadArchive(date) {

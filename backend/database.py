@@ -11,6 +11,9 @@ except Exception:
     dict_row = None
 
 
+_PSYCOPG_AVAILABLE = psycopg is not None and dict_row is not None
+
+
 _DEFAULT_DB_PATH = os.path.join(os.path.dirname(__file__), "..", "data", "news.db")
 _POSTGRES_PREFIXES = ("postgres://", "postgresql://")
 
@@ -23,13 +26,17 @@ def _normalize_database_url(db_url: str) -> str:
 
 
 def _resolve_db_config():
-    db_url = _normalize_database_url(os.environ.get("DATABASE_URL", ""))
-    if db_url.lower().startswith(_POSTGRES_PREFIXES):
-        return "postgres", db_url
-
     explicit = os.environ.get("SQLITE_DB_PATH", "").strip()
     if explicit:
         return "sqlite", explicit
+
+    db_url = _normalize_database_url(os.environ.get("DATABASE_URL", ""))
+    if db_url.lower().startswith(_POSTGRES_PREFIXES):
+        # Allow the app to boot even when psycopg isn't installed locally.
+        # In production, psycopg should be present (see requirements.txt).
+        if not _PSYCOPG_AVAILABLE:
+            return "sqlite", _DEFAULT_DB_PATH
+        return "postgres", db_url
 
     if db_url.lower().startswith("sqlite:///"):
         raw = db_url[len("sqlite:///") :].strip()
@@ -53,7 +60,7 @@ def default_sqlite_path() -> str:
 
 
 def _ensure_psycopg() -> None:
-    if psycopg is not None and dict_row is not None:
+    if _PSYCOPG_AVAILABLE:
         return
     raise RuntimeError(
         "PostgreSQL support requires psycopg. Add `psycopg[binary]` to your environment "

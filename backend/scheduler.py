@@ -18,7 +18,8 @@ def _load_local_env():
                 key, value = line.split("=", 1)
                 key = key.strip()
                 value = value.strip().strip('"').strip("'")
-                if key and key not in os.environ:
+                if key:
+                    # Local dev expects `.env` to be the source of truth.
                     os.environ[key] = value
     except OSError:
         pass
