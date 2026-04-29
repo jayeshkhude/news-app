@@ -485,6 +485,11 @@ def health():
     # Lightweight health check (no DB hit) for uptime monitors / load balancers.
     return jsonify({"ok": True})
 
+@app.route("/ping", methods=["GET"])
+def ping():
+    # Cron job endpoint - returns lightweight response for uptime monitoring
+    return "ok"
+
 def _latest_items_for_user(user):
     rows = _rows_for_latest_news()
     return _with_votes_and_score(rows, user["id"] if user else None)
